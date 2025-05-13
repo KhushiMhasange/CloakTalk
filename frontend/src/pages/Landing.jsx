@@ -16,13 +16,13 @@ export default function Landing() {
                 <p className='text-[var(--accent-p)]'>Study Groups </p>
                 <p className='text-[var(--accent-y)]'>Fun Discussions</p>
                 <p className='text-[var(--accent-p)]'>Resource Sharing</p>
-                <img className="absolute top-40 right-84 invert" src="public/img/star.svg" alt="star" width={40} />
-                <img className="absolute top-110 left-132 invert" src="public/img/star2.svg" alt="star" width={40} />
-                <img className="absolute top-110 left-184 invert" src="public/img/chat.svg" alt="chat" width={40} />
-                <img className="absolute top-30 left-152 invert" src="public/img/heart.svg" alt="heart"width={40}  />
-                <img className="absolute top-90 left-72" src="public/img/flower.svg" alt="flower" width={40} />
-                <img className="absolute top-40 left-84 invert" src="public/img/chat.svg" alt="chat" width={40} />
-                <img className="absolute top-86 right-60 invert" src="public/img/user.svg" alt="user" width={40} />
+                <img className="absolute top-40 right-84 invert" src="/img/star.svg" alt="star" width={40} />
+                <img className="absolute top-110 left-132 invert" src="/img/star2.svg" alt="star" width={40} />
+                <img className="absolute top-110 left-184 invert" src="/img/chat.svg" alt="chat" width={40} />
+                <img className="absolute top-30 left-152 invert" src="/img/heart.svg" alt="heart"width={40}  />
+                <img className="absolute top-90 left-72" src="/img/flower.svg" alt="flower" width={40} />
+                <img className="absolute top-40 left-84 invert" src="/img/chat.svg" alt="chat" width={40} />
+                <img className="absolute top-86 right-60 invert" src="/img/user.svg" alt="user" width={40} />
               </div>
             </div>
             {/* Middle-section */}
