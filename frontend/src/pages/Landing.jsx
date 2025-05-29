@@ -24,7 +24,7 @@ export default function Landing() {
   <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.5 }} viewport={{ once: true }}>
   {/* Landing Section */}
   <div className="Landing flex flex-col my-36 gap-4 cursor-pointer">
-    <motion.h1 initial={{ opacity: 0, y:50 }} whileInView={{ opacity: 1, y:0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className='text-7xl font-extrabold main-head'>Say It Without a Name</motion.h1>
+    <motion.h1 initial={{ opacity: 0, y:50 }} whileInView={{ opacity: 1, y:0 }} transition={{ duration: 0.5 }} viewport={{ once: true }} className='text-7xl font-extrabold main-head'>Say It Without a Name</motion.h1>
     <motion.h2 initial={{ opacity: 0 }} whileInView={{ opacity: 1}} transition={{ delay: 0.5 }} viewport={{ once: true }} className='text-2xl hover:text-gray-300'>
       <Link to="/login" className="cursor-pointer hover:text-[var(--accent-y)]">Log in</Link> with your college ID and connect with your peers without revealing your identity.
     </motion.h2>

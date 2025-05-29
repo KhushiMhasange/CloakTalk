@@ -1,4 +1,5 @@
 @import "tailwindcss";
+
 :root {
   font-family:"Lato",Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   background: linear-gradient(to bottom, #000000, #181818, #000000);
@@ -6,6 +7,7 @@
   width: 100%; 
   color: #F8FAFC;
   overflow-x: hidden;
+
   --accent-p: #ffafcf;
   --accent-y: #fff59a;
 }
@@ -57,6 +59,7 @@ body {
 .Landing img:hover{
   animation: bounce 0.6s ease-in-out infinite;
 }
+
 
 
 

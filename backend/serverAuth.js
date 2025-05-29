@@ -6,7 +6,9 @@ const app = express();
 const connectToDatabase = require('./db');
 const jwt = require('jsonwebtoken');
 const User = require('./Models/user');
-const bcrypt = require('bcryptjs')
+const bcrypt = require('bcryptjs');
+const { OAuth2Client } = require('google-auth-library')
+const client = new OAuth2Client(process.env.CLIENT_ID)
 const clgMail = require('./checkDomain');
 
 app.use(cors());
@@ -29,6 +31,36 @@ const createAndSaveUser = async (email,password) =>{
     }
 }  
 
+app.post("/signup/google",async(req,res)=>{
+    const {token} = req.body;
+   
+    const ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: process.env.CLIENT_ID,
+    });
+
+    const {email} = ticket.getPayload();
+    try{
+        const user = await User.findOne({email:email});
+        if(user){ 
+        const user = {email : email};
+        const assessToken = generateAccessToken(user);
+        const refreshToken = jwt.sign(user,process.env.REFRESH_TOKEN_SECRET);
+        refreshTokens.push(refreshToken);
+        res.json({assessToken:assessToken, refreshToken: refreshToken});
+        return console.log("User successfully logedIn");
+        };
+        if(!clgMail(email)) return res.status(400).json({message:"College mail id is required"});
+        const data = await createAndSaveUser(email);
+        if(!data) return res.status(500).json({ error: "User registration failed" });
+        res.json({
+            email :data.email,
+        });
+    }
+    catch(err){
+        console.error(err);
+    }
+})
 //For validating password
 var passwordRegEx = /^(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/;
 
@@ -43,6 +75,7 @@ app.post("/signup",async (req,res)=>{
         };
         if(!clgMail(email)) return res.status(400).json({message:"College mail id is required"});
         if(!passwordRegEx.test(password)) return res.status(400).json({ message: "Password must be at least 8 characters long, must contain a number and a special character" });
+        console.log(password);
         const hashedPassword = await bcrypt.hash(password,await bcrypt.genSalt());
         const data = await createAndSaveUser(email,hashedPassword);
         if(!data) return res.status(500).json({ error: "User registration failed" });
@@ -81,7 +114,7 @@ app.post("/login",async(req,res)=>{
     const {email,password} = req.body;
     const data = await User.findOne({email:email});
     if(!data){ 
-        res.send("Email Not Found");
+        res.status(400).json({message: "Email Not Found"});
         return console.log("Incorrect Email")
     };
 
@@ -94,13 +127,13 @@ app.post("/login",async(req,res)=>{
         return console.log("User successfully logedIn");
     }
     else{
-        res.send("Incorrect Password");
+        res.status(400).json({message:"Incorrect Password"});
         return console.log("Incorrect Password");
     }
 })
 
 function generateAccessToken(user){
-    return jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn:"15s"});
+    return jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn:"900s"});
 }
 
 app.listen(4000,()=>{
