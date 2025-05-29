@@ -89,20 +89,6 @@ app.post("/signup",async (req,res)=>{
     }
 })
 
-let refreshTokens = []; //create a database and store the generated tokens there
-
-//generating new access token when expired using refresh tokens(also authenticate refresh token)
-app.post("/token", (req,res)=>{
-    const refreshToken = req.body.token;
-    if(refreshToken == null) return res.sendStatus(401);
-    if(!refreshTokens.includes(refreshToken)) return res.sendStatus(403);
-    jwt.verify(refreshToken,process.env.REFRESH_TOKEN_SECRET,(err,user)=>{
-        if (err) return res.sendStatus(403);
-        const assessToken = generateAccessToken({name:user.name});
-        res.json({assessToken:assessToken});
-    })
-})
-
 //delete the refresh token from database
 app.delete("/logout",(req,res)=>{
     refreshTokens = refreshTokens.filter(token => token!= req.body.token);
@@ -120,10 +106,10 @@ app.post("/login",async(req,res)=>{
 
     if(await bcrypt.compare(password, data.password)){
         const user = {email : email};
-        const assessToken = generateAccessToken(user);
+        const accessToken = generateAccessToken(user);
         const refreshToken = jwt.sign(user,process.env.REFRESH_TOKEN_SECRET);
         refreshTokens.push(refreshToken);
-        res.json({assessToken:assessToken, refreshToken: refreshToken});
+        res.json({accessToken:accessToken, refreshToken: refreshToken});
         return console.log("User successfully logedIn");
     }
     else{
@@ -135,6 +121,23 @@ app.post("/login",async(req,res)=>{
 function generateAccessToken(user){
     return jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn:"900s"});
 }
+
+let refreshTokens = []; //create a database and store the generated tokens there
+
+//generating new access token when expired using refresh tokens(also authenticate refresh token)
+app.post("/token", (req,res)=>{
+    const refreshToken = req.body.token;
+    if(refreshToken == null) return res.sendStatus(401);
+    if(!refreshTokens.includes(refreshToken)) return res.sendStatus(403);
+    jwt.verify(refreshToken,process.env.REFRESH_TOKEN_SECRET,(err,user)=>{
+        if (err) return res.sendStatus(403);
+        refreshTokens = refreshTokens.filter(token => token!= req.body.token);
+        const newaccessToken = generateAccessToken({name:user.name});
+        const newrefreshToken = jwt.sign({name:user.name},process.env.REFRESH_TOKEN_SECRET);
+        refreshTokens.push(newrefreshToken);
+        res.json({accessToken: newaccessToken, refreshToken: newrefreshToken});
+    })
+})
 
 app.listen(4000,()=>{
     console.log("The server is running on port 4000");

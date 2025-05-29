@@ -14,13 +14,15 @@ export default function Login() {
         console.log(res.credential);
         try {
           const response = await axios.post('http://localhost:4000/signup/google', {token: res.credential},);
-          console.log("Signup success:", response.data);
+          console.log("Login success:", response.data);
+          localStorage.setItem('access_token', response.data.accessToken);
+          localStorage.setItem('refresh_token', response.data.refreshToken);
           navigate('/');
         } catch (err) {
           if (err.response && err.response.status === 400) {
           alert(err.response.data.message); 
           } else {
-          console.error("Signup failed", err);
+          console.error("Login failed", err);
           alert("Something went wrong. Try again.");
           }
         }
@@ -31,6 +33,8 @@ export default function Login() {
         try {
           const response = await axios.post('http://localhost:4000/login', {email,password},);
           console.log(response.data);
+          localStorage.setItem('access_token', response.data.accesstoken);
+          localStorage.setItem('refresh_token', response.data.refreshToken);
           navigate('/');
         } catch (err) {
           if (err.response && err.response.status === 400) {

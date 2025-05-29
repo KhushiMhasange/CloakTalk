@@ -47,7 +47,7 @@ async function handleSubmit (e){
     {<Navbar/>}
         <div className="flex justify-center items-center pt-20">
         <form onSubmit={handleSubmit} className={`bg-zinc-950 p-6  flex flex-col items-start rounded-lg w-80 hover:${borderClass}`}    
-              style={{boxShadow:`-1px 3px 8px var(--accent-p),  1px -3px 8px var(--accent-y)`}}>
+              style={{boxShadow:`-1px 3px 8px var(--accent-p),  1px -4px 8px var(--accent-y)`}}>
         <h2 className="text-2xl font-semibold mx-auto mb-6 text-[var(--accent-y)]">Sign Up</h2>
         
         <label className="block mb-1">College Email :</label>
