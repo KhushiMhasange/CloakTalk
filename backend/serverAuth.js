@@ -6,6 +6,7 @@ const app = express();
 const connectToDatabase = require('./db');
 const jwt = require('jsonwebtoken');
 const User = require('./Models/user');
+const Token = require('./Models/tokens');
 const bcrypt = require('bcryptjs');
 const { OAuth2Client } = require('google-auth-library')
 const client = new OAuth2Client(process.env.CLIENT_ID)
@@ -30,6 +31,30 @@ const createAndSaveUser = async (email,password) =>{
         console.error("User not saved",err);
     }
 }  
+
+const saveRefreshTokens = async (token) =>{
+    try{
+        const token = new Token({
+            refreshToken:token,
+        });
+        const saveData = await token.save();
+        console.log("Token Saved",saveData);
+        return saveData;
+    }
+    catch(err){
+        console.error("Token not saved",err);
+    }
+}
+
+const deleteRefreshToken = async (token) =>{
+    try{
+       const token = await Token.findOne({refreshToken:refreshToken});
+       Token.deleteOne(token);
+    }
+    catch(err){
+        console.error("Token not deleted",err);
+    }
+}
 
 app.post("/signup/google",async(req,res)=>{
     const {token} = req.body;
@@ -91,7 +116,7 @@ app.post("/signup",async (req,res)=>{
 
 //delete the refresh token from database
 app.delete("/logout",(req,res)=>{
-    refreshTokens = refreshTokens.filter(token => token!= req.body.token);
+    deleteRefreshToken(refreshToken);
     res.sendStatus(204);
 })
 
@@ -108,7 +133,7 @@ app.post("/login",async(req,res)=>{
         const user = {email : email};
         const accessToken = generateAccessToken(user);
         const refreshToken = jwt.sign(user,process.env.REFRESH_TOKEN_SECRET);
-        refreshTokens.push(refreshToken);
+        await saveRefreshTokens(refreshToken);
         res.json({accessToken:accessToken, refreshToken: refreshToken});
         return console.log("User successfully logedIn");
     }
@@ -122,19 +147,18 @@ function generateAccessToken(user){
     return jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn:"900s"});
 }
 
-let refreshTokens = []; //create a database and store the generated tokens there
-
 //generating new access token when expired using refresh tokens(also authenticate refresh token)
-app.post("/token", (req,res)=>{
+app.post("/token", async (req,res)=>{
     const refreshToken = req.body.token;
     if(refreshToken == null) return res.sendStatus(401);
-    if(!refreshTokens.includes(refreshToken)) return res.sendStatus(403);
+    const token = await Token.findOne({refreshToken:refreshToken});
+    if(!token) return res.sendStatus(403);
     jwt.verify(refreshToken,process.env.REFRESH_TOKEN_SECRET,(err,user)=>{
         if (err) return res.sendStatus(403);
-        refreshTokens = refreshTokens.filter(token => token!= req.body.token);
+        deleteRefreshToken(refreshToken);
         const newaccessToken = generateAccessToken({name:user.name});
         const newrefreshToken = jwt.sign({name:user.name},process.env.REFRESH_TOKEN_SECRET);
-        refreshTokens.push(newrefreshToken);
+        saveRefreshTokens(newrefreshToken);
         res.json({accessToken: newaccessToken, refreshToken: newrefreshToken});
     })
 })

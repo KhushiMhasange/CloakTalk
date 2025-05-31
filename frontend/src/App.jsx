@@ -1,6 +1,7 @@
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import Landing from './pages/Landing';
+import Feed from './pages/feed';
 import './App.css';
 import {BrowserRouter as Router,Routes, Route} from 'react-router-dom';
 
@@ -13,6 +14,7 @@ function App() {
         <Route path='/' element={<Landing/>}/>  
         <Route path='/sign-up' element={<Signup/>}/>
         <Route path='/log-in' element={<Login/>}/>
+        <Route path='/feed' element={<Feed/>}/>
       </Routes>
     </div>
     </Router>
