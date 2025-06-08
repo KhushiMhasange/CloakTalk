@@ -1,7 +1,7 @@
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import Landing from './pages/Landing';
-import Feed from './pages/feed';
+import Feed from './pages/Feed';
 import Profile from './pages/Profile';
 import './App.css';
 import {BrowserRouter as Router,Routes, Route} from 'react-router-dom';
