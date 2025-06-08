@@ -15,6 +15,15 @@ const userSchema = new mongoose.Schema({
         type : String,
         minlength: 6,
     },
+    anonymousUsername:{
+        type:String,
+        unique:true,
+        required:true,
+    },
+    anonymousPfp :{
+        type: String,
+        required: true,
+    },
     },
     { timestamps: true }
 );

@@ -11,7 +11,6 @@ export default function Signup() {
   const navigate = useNavigate();
 
   async function handleSignup (res){
-    console.log(res.credential);
     try {
       const response = await axios.post('http://localhost:4000/signup/google', {token: res.credential},);
       console.log("Signup success:", response.data);

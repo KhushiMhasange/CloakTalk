@@ -9,15 +9,15 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
     const borderClass = "border border-t-[var(--accent-p)] border-l-[var(--accent-p)] border-r-[var(--accent-y)] border-b-[var(--accent-y)]";
-
+     
     async function handleSignin (res){
-        console.log(res.credential);
         try {
           const response = await axios.post('http://localhost:4000/signup/google', {token: res.credential},);
           console.log("Login success:", response.data);
           localStorage.setItem('access_token', response.data.accessToken);
           localStorage.setItem('refresh_token', response.data.refreshToken);
-          navigate('/');
+          localStorage.setItem('user',JSON.stringify(response.data.user));
+          navigate('/feed');
         } catch (err) {
           if (err.response && err.response.status === 400) {
           alert(err.response.data.message); 
@@ -35,7 +35,8 @@ export default function Login() {
           console.log(response.data);
           localStorage.setItem('access_token', response.data.accesstoken);
           localStorage.setItem('refresh_token', response.data.refreshToken);
-          navigate('/');
+          localStorage.setItem('user',JSON.stringify(response.data.user));
+          navigate('/feed');
         } catch (err) {
           if (err.response && err.response.status === 400) {
           alert(err.response.data.message); 

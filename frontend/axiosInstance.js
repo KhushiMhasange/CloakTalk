@@ -3,7 +3,7 @@ import axios from 'axios';
 //refrence https://medium.com/@velja/token-refresh-with-axios-interceptors-for-a-seamless-authentication-experience-854b06064bde
 
 const axiosInstance = axios.create({
-    baseURL:'http://localhost:4000/'
+    baseURL:'http://localhost:3000/'
 });
 
 //adding the access token to every outgoing req
@@ -23,6 +23,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
     (response) => response, //directly return response if successful
     async (error) => {
+    console.log("axios interceptor");
     const originalRequest = error.config;
     if (
       error.response?.status === 401 &&
@@ -34,6 +35,7 @@ axiosInstance.interceptors.response.use(
         const res = await axios.post('http://localhost:4000/token', {
           refreshToken,
         });
+        if(res.data) console.log("new tokens generated",res.data);
         localStorage.setItem('access_token', res.data.accessToken);
         localStorage.setItem('refresh_token', res.data.refreshToken);
 
@@ -44,7 +46,7 @@ axiosInstance.interceptors.response.use(
       catch(refreshError){
         console.error('Token refresh failed', refreshError);
         localStorage.clear();
-        window.location.href = '/login';
+        window.location.href = '/log-in';
         return Promise.reject(refreshError);
       }
     }

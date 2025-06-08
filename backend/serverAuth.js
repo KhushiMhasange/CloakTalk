@@ -11,17 +11,23 @@ const bcrypt = require('bcryptjs');
 const { OAuth2Client } = require('google-auth-library')
 const client = new OAuth2Client(process.env.CLIENT_ID)
 const clgMail = require('./checkDomain');
+const { getRandomUsername, getRandomPfp } = require('./randomName');
+
 
 app.use(cors());
 app.use(express.json());
 
 connectToDatabase();
 
-const createAndSaveUser = async (email,password) =>{
+const createAndSaveUser = async (email,password=null) =>{
     try{
+        const anonymousUsername = await getRandomUsername();
+        const anonymousPfp = await getRandomPfp();
         const user = new User({
             email:email,
             password:password,
+            anonymousUsername,
+            anonymousPfp
         });
         const saveData = await user.save();
         console.log("User Saved",saveData);
@@ -34,10 +40,10 @@ const createAndSaveUser = async (email,password) =>{
 
 const saveRefreshTokens = async (token) =>{
     try{
-        const token = new Token({
+        const newtoken = new Token({
             refreshToken:token,
         });
-        const saveData = await token.save();
+        const saveData = await newtoken.save();
         console.log("Token Saved",saveData);
         return saveData;
     }
@@ -48,8 +54,8 @@ const saveRefreshTokens = async (token) =>{
 
 const deleteRefreshToken = async (token) =>{
     try{
-       const token = await Token.findOne({refreshToken:refreshToken});
-       Token.deleteOne(token);
+       await Token.findOneAndDelete({ token });
+       console.log("token deleted");
     }
     catch(err){
         console.error("Token not deleted",err);
@@ -68,18 +74,27 @@ app.post("/signup/google",async(req,res)=>{
     try{
         const user = await User.findOne({email:email});
         if(user){ 
-        const user = {email : email};
         const assessToken = generateAccessToken(user);
-        const refreshToken = jwt.sign(user,process.env.REFRESH_TOKEN_SECRET);
-        refreshTokens.push(refreshToken);
-        res.json({assessToken:assessToken, refreshToken: refreshToken});
+        const refreshToken = generateRefreshToken(user);
+        await saveRefreshTokens(refreshToken);
+        res.json({
+                message: "User successfully logged in",
+                accessToken: assessToken, 
+                refreshToken: refreshToken,
+                user: { 
+                    userId : user._id,
+                    username: user.anonymousUsername,
+                    pfp: user.anonymousPfp,
+                }
+            });
         return console.log("User successfully logedIn");
         };
         if(!clgMail(email)) return res.status(400).json({message:"College mail id is required"});
         const data = await createAndSaveUser(email);
         if(!data) return res.status(500).json({ error: "User registration failed" });
         res.json({
-            email :data.email,
+            username :data.anonymousUsername,
+            pfp : data.anonymousPfp
         });
     }
     catch(err){
@@ -123,16 +138,15 @@ app.delete("/logout",(req,res)=>{
 //generating access token and refresh token using user info from request body
 app.post("/login",async(req,res)=>{
     const {email,password} = req.body;
-    const data = await User.findOne({email:email});
+    const user = await User.findOne({email:email});
     if(!data){ 
         res.status(400).json({message: "Email Not Found"});
         return console.log("Incorrect Email")
     };
 
     if(await bcrypt.compare(password, data.password)){
-        const user = {email : email};
         const accessToken = generateAccessToken(user);
-        const refreshToken = jwt.sign(user,process.env.REFRESH_TOKEN_SECRET);
+        const refreshToken = generateRefreshToken(user);
         await saveRefreshTokens(refreshToken);
         res.json({accessToken:accessToken, refreshToken: refreshToken});
         return console.log("User successfully logedIn");
@@ -143,23 +157,43 @@ app.post("/login",async(req,res)=>{
     }
 })
 
+function generateRefreshToken(user){
+    const payload = {
+    _id: user._id, 
+    anonymousUsername: user.anonymousUsername, 
+    anonymousPfp: user.anonymousPfp, 
+    };
+    return jwt.sign(payload,process.env.REFRESH_TOKEN_SECRET);
+}
 function generateAccessToken(user){
-    return jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn:"900s"});
+    const payload = {
+    userId: user._id, 
+    anonymousUsername: user.anonymousUsername, 
+    anonymousPfpUrl: user.anonymousPfp, 
+    };
+    return jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET,{expiresIn:"20m"});
 }
 
 //generating new access token when expired using refresh tokens(also authenticate refresh token)
 app.post("/token", async (req,res)=>{
-    const refreshToken = req.body.token;
+    console.log("inside /token api");
+    const refreshToken = req.body.refreshToken;
     if(refreshToken == null) return res.sendStatus(401);
-    const token = await Token.findOne({refreshToken:refreshToken});
+    const token = await Token.findOne({refreshToken});
     if(!token) return res.sendStatus(403);
-    jwt.verify(refreshToken,process.env.REFRESH_TOKEN_SECRET,(err,user)=>{
+    jwt.verify(refreshToken,process.env.REFRESH_TOKEN_SECRET,async(err,user)=>{
         if (err) return res.sendStatus(403);
-        deleteRefreshToken(refreshToken);
-        const newaccessToken = generateAccessToken({name:user.name});
-        const newrefreshToken = jwt.sign({name:user.name},process.env.REFRESH_TOKEN_SECRET);
-        saveRefreshTokens(newrefreshToken);
+        try{
+        await deleteRefreshToken(refreshToken);
+        console.log("user data",user);
+        const newaccessToken = generateAccessToken(user);
+        const newrefreshToken = generateRefreshToken(user)
+        await saveRefreshTokens(newrefreshToken);
         res.json({accessToken: newaccessToken, refreshToken: newrefreshToken});
+        }catch(err){
+            console.error("Token refresh error:", e);
+            return res.sendStatus(500);
+        }
     })
 })
 

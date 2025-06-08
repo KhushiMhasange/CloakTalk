@@ -2,14 +2,17 @@
 
 :root {
   font-family:"Lato",Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  background: linear-gradient(to bottom, #000000, #181818, #000000);
+  background: linear-gradient(to bottom, #000000, #181818, #000000); 
+  background-attachment: fixed;
   min-height: 100vh; 
   width: 100%; 
   color: #F8FAFC;
   overflow-x: hidden;
+  /* max-width: 1920px !important; */
 
   --accent-p: #ffafcf;
   --accent-y: #fff59a;
+  /* --accent-y: #f2eaa7; */
 }
 
 body {

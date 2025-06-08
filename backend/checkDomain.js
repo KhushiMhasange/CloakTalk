@@ -12,7 +12,7 @@ const Domains = [
     "medicaps.ac.in", "svvv.edu.in"
 ];
 
-
+//implement vaild email id check like is the email in correct format.
 function checkDomain(email){
     const domain = email.split("@")[1];
     if(Domains.includes(domain)) return true;
