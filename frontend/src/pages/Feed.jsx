@@ -60,7 +60,7 @@ export default function Feed() {
     return(
        <>
         <div className="Feed-page">
-            <div className="flex  justify-between pb-4 border-zinc-800">
+            <div className="flex justify-between pb-4 border-zinc-800">
                 <div className="flex gap-2 items-center">
                     <img src="/img/CloakTalk-logo.png"className="h-5 transition hover:scale-110"></img>
                     {/* <h3 className="p-1 font-bold text-xl text-[var(--accent-y)] "> </h3> */}
@@ -88,7 +88,7 @@ export default function Feed() {
                     </div>) }
                 </div>
             </div>
-            <div className="bg-zinc-900 rounded w-160 mx-auto p-2 mt-2">
+            <div className="bg-zinc-900 rounded-sm w-160 mx-auto p-2 mt-2">
                 <button className="group flex gap-2 items-center text-lg px-2 tracking-wide" onClick={CreatePost} >
                     <img src="/img/post.svg" alt="+ to add post" className="w-8 transition group-hover:scale-105" />Share your thoughts...</button>
                 <div id="addpost" className="hidden bg-zinc-950 p-2 my-2 rounded">
