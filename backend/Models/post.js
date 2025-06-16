@@ -15,6 +15,12 @@ const postSchema = new mongoose.Schema({
     content :{
         type: String,
     },
+    mediaPath:{
+        type:String,
+    },
+    mediaType:{
+         type:String,
+    },
     },
     { timestamps: true }
 );

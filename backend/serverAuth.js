@@ -40,9 +40,16 @@ const createAndSaveUser = async (email,password=null) =>{
 
 const saveRefreshTokens = async (token) =>{
     try{
+        console.log("inside save rt");
+        const existingToken = await Token.findOne({ refreshToken: token });
+        if (existingToken) {
+            console.log("Token already exists:", existingToken);
+            return existingToken;
+        }
         const newtoken = new Token({
             refreshToken:token,
         });
+    
         const saveData = await newtoken.save();
         console.log("Token Saved",saveData);
         return saveData;
@@ -62,6 +69,7 @@ const deleteRefreshToken = async (token) =>{
     }
 }
 
+
 app.post("/signup/google",async(req,res)=>{
     const {token} = req.body;
    
@@ -74,19 +82,20 @@ app.post("/signup/google",async(req,res)=>{
     try{
         const user = await User.findOne({email:email});
         if(user){ 
-        const assessToken = generateAccessToken(user);
+        const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
+        console.log("refresh token",refreshToken);
         await saveRefreshTokens(refreshToken);
         res.json({
                 message: "User successfully logged in",
-                accessToken: assessToken, 
+                accessToken: accessToken, 
                 refreshToken: refreshToken,
                 user: { 
                     userId : user._id,
                     username: user.anonymousUsername,
                     pfp: user.anonymousPfp,
                 }
-            });
+        });
         return console.log("User successfully logedIn");
         };
         if(!clgMail(email)) return res.status(400).json({message:"College mail id is required"});
@@ -120,8 +129,8 @@ app.post("/signup",async (req,res)=>{
         const data = await createAndSaveUser(email,hashedPassword);
         if(!data) return res.status(500).json({ error: "User registration failed" });
         res.json({
-            email :data.email,
-            password : data.password,
+            username :data.anonymousUsername,
+            pfp : data.anonymousPfp
         });
     }
     catch(err){
@@ -130,8 +139,9 @@ app.post("/signup",async (req,res)=>{
 })
 
 //delete the refresh token from database
-app.delete("/logout",(req,res)=>{
-    deleteRefreshToken(refreshToken);
+app.delete("/logout",async (req,res)=>{
+    const refreshToken = req.body.refreshToken;
+    await deleteRefreshToken(refreshToken);
     res.sendStatus(204);
 })
 
@@ -139,16 +149,25 @@ app.delete("/logout",(req,res)=>{
 app.post("/login",async(req,res)=>{
     const {email,password} = req.body;
     const user = await User.findOne({email:email});
-    if(!data){ 
+    if(!user){ 
         res.status(400).json({message: "Email Not Found"});
         return console.log("Incorrect Email")
     };
 
-    if(await bcrypt.compare(password, data.password)){
+    if(await bcrypt.compare(password, user.password)){
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
         await saveRefreshTokens(refreshToken);
-        res.json({accessToken:accessToken, refreshToken: refreshToken});
+        res.json({
+                message: "User successfully logged in",
+                accessToken: accessToken, 
+                refreshToken: refreshToken,
+                user: { 
+                    userId : user._id,
+                    username: user.anonymousUsername,
+                    pfp: user.anonymousPfp,
+                }
+        });
         return console.log("User successfully logedIn");
     }
     else{
@@ -176,7 +195,6 @@ function generateAccessToken(user){
 
 //generating new access token when expired using refresh tokens(also authenticate refresh token)
 app.post("/token", async (req,res)=>{
-    console.log("inside /token api");
     const refreshToken = req.body.refreshToken;
     if(refreshToken == null) return res.sendStatus(401);
     const token = await Token.findOne({refreshToken});
@@ -185,13 +203,12 @@ app.post("/token", async (req,res)=>{
         if (err) return res.sendStatus(403);
         try{
         await deleteRefreshToken(refreshToken);
-        console.log("user data",user);
         const newaccessToken = generateAccessToken(user);
-        const newrefreshToken = generateRefreshToken(user)
+        const newrefreshToken = generateRefreshToken(user);
         await saveRefreshTokens(newrefreshToken);
         res.json({accessToken: newaccessToken, refreshToken: newrefreshToken});
         }catch(err){
-            console.error("Token refresh error:", e);
+            console.error("Token refresh error:", err);
             return res.sendStatus(500);
         }
     })

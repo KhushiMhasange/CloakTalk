@@ -7,9 +7,14 @@ export const UserProvider = ({children}) =>{
     const [user, setUser] = useState(null); 
 
     useEffect(()=>{
-        const userData = JSON.parse(localStorage.getItem('user'));
-        if(userData){
+        const userString = localStorage.getItem('user');
+        if (userString && userString !== 'undefined') {
+        try {
+            const userData = JSON.parse(userString);
             setUser(userData);
+        } catch (error) {
+            console.error('Invalid user JSON:', error);
+        }
         }
     },[])
 

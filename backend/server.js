@@ -1,5 +1,7 @@
 require('dotenv').config();
 require('./db');
+const multer = require('multer');
+const path = require('path');
 const cors = require('cors'); 
 const express = require('express');
 const app = express();
@@ -10,7 +12,38 @@ const { findOne } = require('./Models/user');
 app.use(cors());
 app.use(express.json());
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 connectToDatabase();
+
+const storage = multer.diskStorage({
+      destination: function (req,file,cb){
+        cb(null,'uploads/');
+      },
+      filename:function(req,file,cb){
+        cb(null, file.fieldname + '-'+Date.now()+path.extname(file.originalname));
+      }
+})
+
+const fileFilter = (req, file, cb) => {
+    const allowedMimeTypes = [
+        'image/jpeg', 'image/png', 'image/gif',
+        'video/mp4', 'video/quicktime', 'video/avi',
+        'application/pdf', 'text/plain'
+    ];
+
+    if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Unsupported file type!'), false);
+    }
+};
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 25 * 1024 * 1024 }, //25mb max
+    fileFilter: fileFilter
+});
 
 //only accesss the endpoint if the user's token is authenticated
 app.get("/posts",authenticateToken,async(req,res)=>{
@@ -22,16 +55,31 @@ app.get("/posts",authenticateToken,async(req,res)=>{
   }
 })
 
-app.post('/posts',authenticateToken,async (req,res)=>{
+app.get("/posts/:id",authenticateToken,async(req,res)=>{
+    try{ 
+    const userId = req.params.id;
+    const posts = await Post.find({userId}).sort({createdAt:-1});
+    res.json(posts);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+})
+
+app.post('/posts',authenticateToken,upload.single('media'),async (req,res)=>{
   const { userId,anonymousUsername,anonymousPfpUrl } = req.user;
   const { content } = req.body;
-
+  const mediaPath = req.file ? `/uploads/${req.file.filename}` : null; // Get path if file exists
+  const mediaType = req.file ? req.file.mimetype : null; 
+  
   const newPost = new Post({
     userId: userId,
     anonymousUsername:anonymousUsername, 
     anonymousPfp:anonymousPfpUrl,
     content: content,
+    mediaPath: mediaPath,
+    mediaType: mediaType,
   });
+  
   const saveData = await newPost.save();
   res.status(201).json({ message: 'Post created!' });
   return saveData;
@@ -60,15 +108,12 @@ app.delete('/posts/:id',authenticateToken,async(req,res)=>{
 //so toh extract the token we split after ' ' and it's the 2nd string so (1).
 //A middleware function.
 function authenticateToken(req,res,next){
-    console.log("inside authenticate token");
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if(token == null) return res.sendStatus(401); //the user didn't send the token.
     jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,user)=>{
         if (err) return  res.sendStatus(401); //invalid token
         req.user = user; //set our user on our req
-        console.log(user);
-        console.log("leaving authenticate token");
         next(); //move on
     });
 }

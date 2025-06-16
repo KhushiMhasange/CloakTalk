@@ -14,7 +14,7 @@ export default function Signup() {
     try {
       const response = await axios.post('http://localhost:4000/signup/google', {token: res.credential},);
       console.log("Signup success:", response.data);
-      navigate('/');
+      navigate('/log-in');
     } catch (err) {
       if (err.response && err.response.status === 400) {
       alert(err.response.data.message); 
@@ -30,7 +30,7 @@ async function handleSubmit (e){
   try{
     const response = await axios.post('http://localhost:4000/signup',{email,password});
     console.log(response.data);
-    navigate('/login');
+    navigate('/log-in');
   }catch(err){
     if (err.response && err.response.status === 400) {
       alert(err.response.data.message); 
