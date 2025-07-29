@@ -1,4 +1,4 @@
-const User = require('./Models/user');
+import User from './Models/user.js';
 
 const adjectives = [
   "Silent", "Whispering", "Mystic", "Crimson", "Golden", "Emerald", "Blazing", "Frozen", "Dancing", "Jovial",
@@ -50,8 +50,5 @@ function getRandomPfp(){
     return pfp; 
 }
 
-module.exports =  {
-  getRandomUsername,
-  getRandomPfp
-};
+export { getRandomUsername, getRandomPfp };
 

@@ -1,5 +1,6 @@
-require("dotenv").config();
-const mongoose = require("mongoose");
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+dotenv.config();
 
 //database is in the uri after /<name of db>?
 // mongoose.connect(process.env.MONGODB_URI)
@@ -15,8 +16,9 @@ const connectToDatabase = async () => {
     } catch (err) {
       console.error('Failed to connect to MongoDB', err);
     }
-  };
+};
+
+export default connectToDatabase;
 
 
-module.exports = connectToDatabase;
 

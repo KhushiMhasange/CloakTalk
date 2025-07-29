@@ -1,18 +1,21 @@
 //only for login/logout and refresh tokens
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const app = express();
-const connectToDatabase = require('./db');
-const jwt = require('jsonwebtoken');
-const User = require('./Models/user');
-const Token = require('./Models/tokens');
-const bcrypt = require('bcryptjs');
-const { OAuth2Client } = require('google-auth-library')
-const client = new OAuth2Client(process.env.CLIENT_ID)
-const clgMail = require('./checkDomain');
-const { getRandomUsername, getRandomPfp } = require('./randomName');
+import dotenv from 'dotenv';
+dotenv.config();
 
+import express from 'express';
+import cors from 'cors';
+import connectToDatabase from './db.js';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import { OAuth2Client } from 'google-auth-library';
+
+import User from './Models/user.js';
+import Token from './Models/tokens.js';
+import clgMail from './checkDomain.js';
+import { getRandomUsername, getRandomPfp } from './randomName.js';
+
+const app = express();
+const client = new OAuth2Client(process.env.CLIENT_ID);
 
 app.use(cors());
 app.use(express.json());
@@ -69,6 +72,16 @@ const deleteRefreshToken = async (token) =>{
     }
 }
 
+// const deleteRefreshTokenAll = async (token) =>{
+//     try{
+//        await Token.deleteMany({});
+//        console.log("token deleted");
+//     }
+//     catch(err){
+//         console.error("Token not deleted",err);
+//     }
+// }
+// // deleteRefreshTokenAll();
 
 app.post("/signup/google",async(req,res)=>{
     const {token} = req.body;

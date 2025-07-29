@@ -49,7 +49,7 @@ export default function Profile() {
             Your Posts
          </div>
          <div className="p-4 bg-zinc-900 rounded-b-2xl border border-zinc-800 shadow-inner">
-            <Post refreshPostsTrigger={0} id={user.userId}/>
+            <Post refreshPostsTrigger={0} userId={user.userId}/>
          </div>
       </div>
       </div>

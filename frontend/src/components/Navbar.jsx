@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 export default function Navbar() {
       return(
         <div>
-            <div className="flex justify-between">
+            <div className="flex justify-between mt-4">
                 <Link to="/">
                 <img src="/img/CloakTalk-logo.png" alt="logo-cloaktalk" width={160} className='transform hover:scale-105 transition-transform duration-300 ease-in-out'/>
                 </Link>

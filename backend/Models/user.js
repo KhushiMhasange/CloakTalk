@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 /*defining user model 
 model are higher order constructors that take a schema and create an instance od a document(equivalen to rows in RDB)
@@ -28,6 +28,6 @@ const userSchema = new mongoose.Schema({
     { timestamps: true }
 );
 
-module.exports = mongoose.model('users',userSchema);
-
+const User = mongoose.model('users',userSchema);
+export default User;
 //'users' is collection name.

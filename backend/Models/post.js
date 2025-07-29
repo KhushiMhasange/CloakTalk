@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const postSchema = new mongoose.Schema({
     userId :{
@@ -14,6 +14,7 @@ const postSchema = new mongoose.Schema({
     },
     content :{
         type: String,
+        maxlength: 500 
     },
     mediaPath:{
         type:String,
@@ -25,4 +26,6 @@ const postSchema = new mongoose.Schema({
     { timestamps: true }
 );
 
-module.exports = mongoose.model('posts',postSchema);
+
+const post = mongoose.model('posts',postSchema);
+export default post;

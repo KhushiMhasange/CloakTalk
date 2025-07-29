@@ -1,20 +1,33 @@
-require('dotenv').config();
-require('./db');
-const multer = require('multer');
-const path = require('path');
-const cors = require('cors'); 
-const express = require('express');
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+import multer from 'multer';
+
+import { getPosts } from './postController.js';
+import connectToDatabase from './db.js';
+import Post from './Models/post.js';
+// import User from './Models/user.js';
+import postsRoute from './postsRoute.js';
+
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config();
+
 const app = express();
-const jwt = require('jsonwebtoken');
-const Post = require('./Models/post');
-const connectToDatabase = require('./db');
-const { findOne } = require('./Models/user');
 app.use(cors());
 app.use(express.json());
 
+app.use('/api/posts', postsRoute); 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 connectToDatabase();
+
 
 const storage = multer.diskStorage({
       destination: function (req,file,cb){
@@ -45,19 +58,12 @@ const upload = multer({
     fileFilter: fileFilter
 });
 
-//only accesss the endpoint if the user's token is authenticated
-app.get("/posts",authenticateToken,async(req,res)=>{
-    try{ 
-    const posts = await Post.find().sort({createdAt:-1});
-    res.json(posts);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-})
+app.get("/posts", authenticateToken, getPosts);
 
-app.get("/posts/:id",authenticateToken,async(req,res)=>{
+
+app.get("/posts/:userid",authenticateToken,async(req,res)=>{
     try{ 
-    const userId = req.params.id;
+    const userId = req.params.userid;
     const posts = await Post.find({userId}).sort({createdAt:-1});
     res.json(posts);
   } catch (err) {
@@ -107,7 +113,7 @@ app.delete('/posts/:id',authenticateToken,async(req,res)=>{
 //The jwt token is send in the authorization header in the BEARER token when user access any end point.
 //so toh extract the token we split after ' ' and it's the 2nd string so (1).
 //A middleware function.
-function authenticateToken(req,res,next){
+export default function authenticateToken(req,res,next){
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if(token == null) return res.sendStatus(401); //the user didn't send the token.

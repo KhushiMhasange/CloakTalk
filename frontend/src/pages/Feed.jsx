@@ -152,35 +152,36 @@ export default function Feed() {
     return(
        <>
         <div className="Feed-page">
-            <div className="flex justify-between pb-4 border-zinc-800">
+            <div className="fixed flex justify-between pb-1 border-zinc-800 z-100 w-full">
                 <div className="flex gap-2 items-center">
                     <img src="/img/CloakTalk-logo.png"className="h-5 transition hover:scale-110"></img>
                     {/* <h3 className="p-1 font-bold text-xl text-[var(--accent-y)] "> </h3> */}
                 </div>
-                <div className="absolute top-5 left-1/2 -translate-x-1/2 w-[40rem]">
-                    <ul className="flex gap-2 p-2 rounded-t-sm justify-start font-bold bg-zinc-900 border-b-2 border-b-zinc-950">
+                <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[40rem]">
+                    <ul className="flex gap-2 p-2 rounded-t-sm justify-start font-bold bg-zinc-900/50 backdrop-blur-md">
                         <li className="p-1 px-2 bg-zinc-950  rounded-sm">For you</li>
                         <li className="p-1 px-2 bg-zinc-950 rounded-sm">Resources</li>
                         <li className="p-1 px-2 bg-zinc-950 rounded-sm">Yap</li>
                     </ul>
                 </div>
-                <div className="group relative flex gap-2" ref={pfpRef} onClick={()=>setShowSettings(showSettings===false?true:false)}>
-                    <h3 className="p-1 font-bold text-[var(--accent-p)]">{user?.username}</h3>
+                <div className="group relative flex gap-2 right-32" ref={pfpRef} onClick={()=>setShowSettings(showSettings===false?true:false)}>
+                    <h3 className="p-1 font-bold text-[var(--accent-p)] cursor-pointer">{user?.username}</h3>
                     <div className="w-8 h-8 overflow-hidden rounded-full">
                     <img src={user?.pfp} alt="user pfp"
-                         className="w-full h-full scale-125 object-cover object-center"/>
+                         className="w-full h-full scale-125 object-cover object-center cursor-pointer"/>
                     </div>   
                     {showSettings && (<div className='absolute top-10 right-0 p-2 rounded-lg font-semibold text-black bg-[#f2eaa7] border-2 border-white w-40'>
                         <ul className='text-left'>
                             <li className='p-1 hover:text-[#e771a1]'><Link to='/profile'><FontAwesomeIcon icon={faUser} className='px-2'/>Profile</Link></li>
                             <li className='p-1 hover:text-[#e771a1]'><Link to='/profile'><FontAwesomeIcon icon={faGear} className='px-2' />Settings</Link></li>
                             <li className='p-1 hover:text-[#e771a1]'><Link to='/profile'><FontAwesomeIcon icon={faStar} className='px-2' />About</Link></li>
-                            <button className='p-1 text-[#e771a1]' onClick={handleLogout}><FontAwesomeIcon icon={faDownload} className='px-2'/>Log out</button>
+                            <button className='p-1 text-[#e771a1] cursor-pointer' onClick={handleLogout}><FontAwesomeIcon icon={faDownload} className='px-2'/>Log out</button>
                         </ul>
                     </div>) }
                 </div>
             </div>
-            <div className="bg-zinc-900 rounded w-160 mx-auto p-2 mt-2">
+            <div className='pt-11'>
+            <div className="bg-zinc-900 rounded w-160 mx-auto p-2">
                 <button className="group flex gap-2 items-center text-lg px-2 tracking-wide" onClick={CreatePost} >
                     <img src="/img/post.svg" alt="+ to add post" className="w-8 transition group-hover:scale-105" />Share your thoughts...</button>
                 <div id="addpost" className="hidden bg-zinc-950 p-2 my-2 rounded">
@@ -245,7 +246,8 @@ export default function Feed() {
                     
                 </div>
             </div>
-            <div className="bg-zinc-900 rounded w-[40rem] mx-auto p-2 mt-2"><Post refreshPostsTrigger={postRefreshKey} id={null}/></div>
+            </div>
+            <div className="bg-zinc-900 rounded w-[40rem] mx-auto p-2 mt-1"><Post refreshPostsTrigger={postRefreshKey} id={null}/></div>
             
         </div>
        </>
