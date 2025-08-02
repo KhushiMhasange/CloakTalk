@@ -24,21 +24,21 @@ export default function Landing() {
   <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.5 }} viewport={{ once: true }}>
   {/* Landing Section */}
   <div className="Landing flex flex-col my-36 gap-4 cursor-pointer">
-    <motion.h1 initial={{ opacity: 0, y:50 }} whileInView={{ opacity: 1, y:0 }} transition={{ duration: 0.5 }} viewport={{ once: true }} className='text-7xl font-extrabold main-head'>Say It Without a Name</motion.h1>
-    <motion.h2 initial={{ opacity: 0 }} whileInView={{ opacity: 1}} transition={{ delay: 0.5 }} viewport={{ once: true }} className='text-2xl hover:text-gray-300'>
+    <motion.h1 initial={{ opacity: 0, y:50 }} whileInView={{ opacity: 1, y:0 }} transition={{ duration: 0.5 }} viewport={{ once: true }} className='text-5xl md:text-7xl font-extrabold main-head'>Say It Without a Name</motion.h1>
+    <motion.h2 initial={{ opacity: 0 }} whileInView={{ opacity: 1}} transition={{ delay: 0.5 }} viewport={{ once: true }} className='text-xl md:text-2xl hover:text-gray-300'>
       <Link to="/login" className="cursor-pointer hover:text-[var(--accent-y)]">Log in</Link> with your college ID and connect with your peers without revealing your identity.
     </motion.h2>
-    <div className='ewlative flex flex-row text-lg justify-center font-bold gap-8'>
+    <div className='ewlative flex flex-row md:text-lg justify-center font-bold gap-8'>
         <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1}} transition={{ delay: 1 }} viewport={{ once: true }} className='text-[var(--accent-p)]'>Study Groups </motion.p>
         <motion.p  initial={{ opacity: 0 }} whileInView={{ opacity: 1}} transition={{ delay: 0.7 }} viewport={{ once: true }} className='text-[var(--accent-y)]'>Fun Discussions</motion.p>
         <motion.p  initial={{ opacity: 0 }} whileInView={{ opacity: 1}} transition={{ delay: 1 }} viewport={{ once: true }} className='text-[var(--accent-p)]'>Resource Sharing</motion.p>
-        <motion.img {...Left} transition={{delay: 0.5}} className="absolute top-40 right-84 invert" src="/img/star.svg" alt="star" width={40} />
-        <motion.img {...Right} transition={{delay: 0.7}} className="absolute top-110 left-132 invert" src="/img/star2.svg" alt="star" width={40} />
-        <motion.img {...Right} transition={{delay: 1.5 }} className="absolute top-110 left-184 invert" src="/img/chat.svg" alt="chat" width={40} />
-        <motion.img {...Right} transition={{delay: 1.7}} className="absolute top-30 left-152 invert" src="/img/heart.svg" alt="heart"width={40}  />
-        <motion.img {...Right} transition={{delay: 0.5}} className="absolute top-90 left-72" src="/img/flower.svg" alt="flower" width={40} />
-        <motion.img {...Right} transition={{delay: 1.2}} className="absolute top-40 left-84 invert" src="/img/chat.svg" alt="chat" width={40} />
-        <motion.img {...Right} transition={{delay: 2}} className="absolute top-86 right-60 invert" src="/img/user.svg" alt="user" width={40} />
+        <motion.img {...Left} transition={{delay: 0.5}} className="absolute md:block md:top-40 md:right-84 invert" src="/img/star.svg" alt="star" width={40} />
+        <motion.img {...Right} transition={{delay: 0.7}} className="absolute md:block md:top-110 left-132 invert" src="/img/star2.svg" alt="star" width={40} />
+        <motion.img {...Right} transition={{delay: 1.5 }} className="absolute md:block md:top-110 md:left-184 invert" src="/img/chat.svg" alt="chat" width={40} />
+        <motion.img {...Right} transition={{delay: 1.7}} className="absolute md:block md:top-30 md:left-152 invert" src="/img/heart.svg" alt="heart"width={40}  />
+        <motion.img {...Right} transition={{delay: 0.5}} className="absolute md:block md:top-90 md:left-72" src="/img/flower.svg" alt="flower" width={40} />
+        <motion.img {...Right} transition={{delay: 1.2}} className="absolute md:block md:top-40 md:left-84 invert" src="/img/chat.svg" alt="chat" width={40} />
+        <motion.img {...Right} transition={{delay: 2}} className="absolute md:block md:top-86 md:right-60 invert" src="/img/user.svg" alt="user" width={40} />
     </div>
   </div>
 

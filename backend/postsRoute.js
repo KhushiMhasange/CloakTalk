@@ -3,7 +3,7 @@ import authenticateToken from './server.js';
 import Like from './Models/like.js';
 import Comment from './Models/comment.js';
 import Bookmark from './Models/bookmark.js';
-import { getComments } from './postController.js';
+import { getComments, getPosts } from './postController.js';
 
 const router = express.Router();
 router.use(authenticateToken);
@@ -87,6 +87,8 @@ router.delete('/bookmark/:postId', async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+
+router.get('/bookmarks',getPosts);
 
 router.get('/:postId/comments', getComments);
 

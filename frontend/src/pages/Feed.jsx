@@ -5,7 +5,7 @@ import axiosInstance from  '../../axiosInstance';
 import { Link,useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUser, faGear,faDownload,faStar } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faGear,faDownload,faStar,faBookmark } from '@fortawesome/free-solid-svg-icons';
 
 export default function Feed() {
     
@@ -175,6 +175,7 @@ export default function Feed() {
                             <li className='p-1 hover:text-[#e771a1]'><Link to='/profile'><FontAwesomeIcon icon={faUser} className='px-2'/>Profile</Link></li>
                             <li className='p-1 hover:text-[#e771a1]'><Link to='/profile'><FontAwesomeIcon icon={faGear} className='px-2' />Settings</Link></li>
                             <li className='p-1 hover:text-[#e771a1]'><Link to='/profile'><FontAwesomeIcon icon={faStar} className='px-2' />About</Link></li>
+                            <li className='p-1 hover:text-[#e771a1]'><Link to='/bookmarks'><FontAwesomeIcon icon={faBookmark} className='px-2' />Bookmarks</Link></li>
                             <button className='p-1 text-[#e771a1] cursor-pointer' onClick={handleLogout}><FontAwesomeIcon icon={faDownload} className='px-2'/>Log out</button>
                         </ul>
                     </div>) }

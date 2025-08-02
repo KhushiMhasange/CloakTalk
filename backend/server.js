@@ -60,16 +60,7 @@ const upload = multer({
 
 app.get("/posts", authenticateToken, getPosts);
 
-
-app.get("/posts/:userid",authenticateToken,async(req,res)=>{
-    try{ 
-    const userId = req.params.userid;
-    const posts = await Post.find({userId}).sort({createdAt:-1});
-    res.json(posts);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-})
+app.get("/posts/:userid",authenticateToken,getPosts);
 
 app.post('/posts',authenticateToken,upload.single('media'),async (req,res)=>{
   const { userId,anonymousUsername,anonymousPfpUrl } = req.user;

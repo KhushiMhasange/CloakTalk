@@ -11,10 +11,31 @@ import User from './Models/user.js';
 export async function getPosts(req, res) {
     try {
         const postId = req.params.id;
+        const user = req.params.userid; //when you wanna retrieve only posts my a particular user for profile page
+        const bookmarked = req.query.bookmarked;
         const userId = req.user ? new mongoose.Types.ObjectId(req.user.userId) : null; //ObjectId (BSON) used to identify a document in a collection we are converting the string to objectId
-        const query = postId ? { _id: postId } : {};
+        let matchQuery = {};
+        if(postId){
+        matchQuery = { _id: postId };
+        }else if (user){
+        matchQuery = { userId: user };
+        }else if(bookmarked){
+            const bookmarks = await Bookmark.find({ userId }).select('postId');
+            const bookmarkedPostIds = bookmarks.map(bookmark => bookmark.postId);
+            
+            if (bookmarkedPostIds.length === 0) {
+                return res.json([]); // Return empty array if no bookmarks
+            }
+            
+            matchQuery = { _id: { $in: bookmarkedPostIds } };
+        }else{
+            matchQuery = {};
+        }
+        
+        console.log('Final match query:', matchQuery);
+
         const posts = await Post.aggregate([
-            { $match: query }, // Filter by ID if present
+            { $match: matchQuery }, // Filter by userID if present
             {
                 $lookup: { //looks into likes and finds all likes where postid matches _id
                     from: Like.collection.name, 
@@ -88,9 +109,10 @@ export async function getPosts(req, res) {
                     createdAt: 1,
                     updatedAt: 1
                 }
-            }
+            },
+            { $sort: { createdAt: -1 } }
         ]);
-
+    
         if (postId && posts.length === 0) {
             return res.status(404).json({ message: 'Post not found' });
         }

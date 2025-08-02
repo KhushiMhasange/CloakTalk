@@ -7,7 +7,7 @@ import Comment from './Comment';
 import Pdf from '../pdf';
 
 // eslint-disable-next-line react/prop-types
-export default function Post({ refreshPostsTrigger, userId }) {
+export default function Post({ refreshPostsTrigger, userId, isBookmarked }) {
 
   const [posts, setPosts] = useState([]);
   const { user } = useContext(UserContext);
@@ -19,9 +19,13 @@ export default function Post({ refreshPostsTrigger, userId }) {
   const fetchPosts = useCallback(async () => {
     try {
       let res;
-      if (userId) {
+      if (userId && !isBookmarked) {
         res = await axiosInstance.get(`/posts/${userId}`);
-      } else res = await axiosInstance.get('/posts');
+      } else if (userId && isBookmarked) {
+        res = await axiosInstance.get(`/api/posts/bookmarks?bookmarked=true`);
+      } else {
+        res = await axiosInstance.get('/posts');
+      }
       setPosts(res.data);
     }
     catch (err) {
