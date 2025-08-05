@@ -7,6 +7,7 @@ import Bookmarks from './pages/Bookmark';
 import Comment from './components/Comment';
 import './App.css';
 import {BrowserRouter as Router,Routes, Route} from 'react-router-dom';
+import Chats from './components/Chats';
 
 function App() {
 
@@ -18,7 +19,9 @@ function App() {
         <Route path='/log-in' element={<Login/>}/>
         <Route path='/feed' element={<Feed/>}/>
         <Route path='/profile' element={<Profile/>}/>
+        <Route path='/profile/:userId' element={<Profile/>}/>
         <Route path='/comment' element={<Comment/>}/>
+        <Route path='/chat' element={<Chats/>}/>
         <Route path='/bookmarks' element={<Bookmarks/>}/>
       </Routes>
     </Router>

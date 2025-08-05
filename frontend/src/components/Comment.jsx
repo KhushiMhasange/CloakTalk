@@ -78,7 +78,7 @@ export default function Comment({ postId, commentId = "root" }) {
                         isLikedByCurrentUser: !comment.isLikedByCurrentUser,
                         likesCount: comment.isLikedByCurrentUser 
                             ? (comment.likesCount || 1) - 1 
-                            : (comment.likesCount || 0) + 1
+                            : (comment.likesCount || 0) + 1,
                     };
                 })
             );
@@ -130,8 +130,8 @@ export default function Comment({ postId, commentId = "root" }) {
                 content: commentInput, 
                 parentCommentId :commentId,
                 replyingToUserId : commentId.UserId});
-               setComments(prev => [res.data, ...prev]);
-               setCommentInput("");
+                setComments(prev => [res.data, ...prev]);
+                setCommentInput("");
             }
             
         } catch (err) {
@@ -166,7 +166,7 @@ export default function Comment({ postId, commentId = "root" }) {
                 </div>
                 <button
                     type="submit"
-                    className="px-3 py-1 font-bold rounded-xl text-[#e771a1] border-2 border-zinc-100 cursor-pointer bg-[var(--accent-y)] transition hover:scale-94 mt-1 disabled:opacity-60"
+                    className="px-3 py-1 font-bold rounded-xl text-[#e771a1] border-2 border-zinc-100 cursor-pointer bg-[var(--accent-y)] transition hover:scale-94 mt-1 disabled:opacity-80"
                     disabled={!commentInput.trim() || submitting}
                 >
                     {submitting ? 'Posting...' : (commentId==="root" ? 'comment':'reply')}

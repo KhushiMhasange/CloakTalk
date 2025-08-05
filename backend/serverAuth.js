@@ -107,6 +107,8 @@ app.post("/signup/google",async(req,res)=>{
                     userId : user._id,
                     username: user.anonymousUsername,
                     pfp: user.anonymousPfp,
+                    followingCount: user.following ? user.following.length : 0, 
+                    followersCount: user.followers ? user.followers.length : 0,
                 }
         });
         return console.log("User successfully logedIn");
@@ -179,6 +181,8 @@ app.post("/login",async(req,res)=>{
                     userId : user._id,
                     username: user.anonymousUsername,
                     pfp: user.anonymousPfp,
+                    followingCount: user.following ? user.following.length : 0, 
+                    followersCount: user.followers ? user.followers.length : 0,
                 }
         });
         return console.log("User successfully logedIn");

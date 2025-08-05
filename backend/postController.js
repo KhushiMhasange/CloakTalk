@@ -11,9 +11,9 @@ import User from './Models/user.js';
 export async function getPosts(req, res) {
     try {
         const postId = req.params.id;
-        const user = req.params.userid; //when you wanna retrieve only posts my a particular user for profile page
+        const user = req.params.userid; //when you wanna retrieve only posts by a particular user for profile page
         const bookmarked = req.query.bookmarked;
-        const userId = req.user ? new mongoose.Types.ObjectId(req.user.userId) : null; //ObjectId (BSON) used to identify a document in a collection we are converting the string to objectId
+        const userId = req.user ? new mongoose.Types.ObjectId(req.user.userId) : null; //current logged in user //ObjectId (BSON) used to identify a document in a collection we are converting the string to objectId
         let matchQuery = {};
         if(postId){
         matchQuery = { _id: postId };
@@ -24,15 +24,13 @@ export async function getPosts(req, res) {
             const bookmarkedPostIds = bookmarks.map(bookmark => bookmark.postId);
             
             if (bookmarkedPostIds.length === 0) {
-                return res.json([]); // Return empty array if no bookmarks
+                return res.json([]); 
             }
             
             matchQuery = { _id: { $in: bookmarkedPostIds } };
         }else{
             matchQuery = {};
         }
-        
-        console.log('Final match query:', matchQuery);
 
         const posts = await Post.aggregate([
             { $match: matchQuery }, // Filter by userID if present
@@ -103,6 +101,7 @@ export async function getPosts(req, res) {
                     content: 1,
                     mediaPath: 1,
                     mediaType: 1,
+                    isFollowingAuthor: 1,
                     anonymousUsername: 1,
                     anonymousPfp: 1,
                     userId: 1, // The original user ID who created the post
@@ -112,7 +111,19 @@ export async function getPosts(req, res) {
             },
             { $sort: { createdAt: -1 } }
         ]);
-    
+        if (userId) { 
+            const currentUser = await User.findById(userId);
+            if (currentUser && currentUser.following) {
+                const followingIds = currentUser.following.map(id => id.toString());
+                posts.forEach(post => {
+                    post.isFollowingAuthor = followingIds.includes(post.userId.toString());
+                });
+            } else {
+                posts.forEach(post => {
+                    post.isFollowingAuthor = false;
+                });
+            }
+        } 
         if (postId && posts.length === 0) {
             return res.status(404).json({ message: 'Post not found' });
         }

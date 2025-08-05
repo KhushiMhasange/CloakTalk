@@ -10,6 +10,7 @@ import connectToDatabase from './db.js';
 import Post from './Models/post.js';
 // import User from './Models/user.js';
 import postsRoute from './postsRoute.js';
+import userRoutes from './userRoutes.js';
 
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -24,6 +25,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/posts', postsRoute); 
+app.use('/api/users', userRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 connectToDatabase();

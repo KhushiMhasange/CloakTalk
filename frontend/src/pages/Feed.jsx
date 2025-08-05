@@ -149,22 +149,26 @@ export default function Feed() {
         }
     };
 
+    const handleChatButton = () =>{
+        navigate('/chat')
+    }
+
     return(
        <>
-        <div className="Feed-page">
+        <div className="Feed-page relative">
             <div className="fixed flex justify-between pb-1 border-zinc-800 z-100 w-full">
                 <div className="flex gap-2 items-center">
                     <img src="/img/CloakTalk-logo.png"className="h-5 transition hover:scale-110"></img>
                     {/* <h3 className="p-1 font-bold text-xl text-[var(--accent-y)] "> </h3> */}
                 </div>
-                <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[40rem]">
+                <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl">
                     <ul className="flex gap-2 p-2 rounded-t-sm justify-start font-bold bg-zinc-900/50 backdrop-blur-md">
                         <li className="p-1 px-2 bg-zinc-950  rounded-sm">For you</li>
                         <li className="p-1 px-2 bg-zinc-950 rounded-sm">Resources</li>
                         <li className="p-1 px-2 bg-zinc-950 rounded-sm">Yap</li>
                     </ul>
                 </div>
-                <div className="group relative flex gap-2 right-32" ref={pfpRef} onClick={()=>setShowSettings(showSettings===false?true:false)}>
+                <div className="group relative flex gap-2 right-28" ref={pfpRef} onClick={()=>setShowSettings(showSettings===false?true:false)}>
                     <h3 className="p-1 font-bold text-[var(--accent-p)] cursor-pointer">{user?.username}</h3>
                     <div className="w-8 h-8 overflow-hidden rounded-full">
                     <img src={user?.pfp} alt="user pfp"
@@ -182,7 +186,7 @@ export default function Feed() {
                 </div>
             </div>
             <div className='pt-11'>
-            <div className="bg-zinc-900 rounded w-160 mx-auto p-2">
+            <div className="bg-zinc-900 rounded w-full max-w-3xl mx-auto p-2">
                 <button className="group flex gap-2 items-center text-lg px-2 tracking-wide" onClick={CreatePost} >
                     <img src="/img/post.svg" alt="+ to add post" className="w-8 transition group-hover:scale-105" />Share your thoughts...</button>
                 <div id="addpost" className="hidden bg-zinc-950 p-2 my-2 rounded">
@@ -231,7 +235,7 @@ export default function Feed() {
                                 {uploadProgress > 0 && uploadProgress < 100 && (
                                     <span className="text-sm text-zinc-400 mr-2">{uploadProgress}%</span>
                                 )}
-                                <button className="px-4 mx-2 font-bold rounded-xl text-[#e771a1] border-2 border-zinc-100 cursor-pointer bg-[var(--accent-y)] transition hover:scale-94"
+                                <button className="px-4 mx-2 font-bold rounded-xl text-[#e771a1] border-2 border-zinc-100 cursor-pointer bg-[var(--accent-y)] transition hover:scale-94 disabled:opacity-80"
                                     onClick={handleSubmitPost}
                                     disabled={!content.trim()  || uploadProgress > 0} >
                                     {uploadProgress > 0 ? 'Uploading...' : 'Post'}
@@ -244,11 +248,29 @@ export default function Feed() {
                         <li className="px-2 bg-zinc-900  rounded-sm">#Rant</li>
                         <li className="px-2 bg-zinc-900  rounded-sm">#Advice</li>
                     </ul>
-                    
                 </div>
             </div>
             </div>
-            <div className="bg-zinc-900 rounded w-[40rem] mx-auto p-2 mt-1"><Post refreshPostsTrigger={postRefreshKey} id={null}/></div>
+            <div className='fixed bottom-5 right-10'> 
+                <button className='
+                    flex flex-col items-center gap-3 p-3
+                    bg-[var(--accent-p)]
+                    rounded-full 
+                    transform hover:scale-105 
+                    transition-all duration-300 ease-in-out
+                    backdrop-blur-sm
+                    border-zinc-700
+                    border-2
+                ' onClick={handleChatButton}>
+                    <img 
+                        src="img/dm.svg" 
+                        alt="" 
+                        className='w-7 h-7'
+                    />
+                </button>
+            </div>
+
+            <div className="bg-zinc-900 rounded w-full max-w-3xl mx-auto p-2 mt-1"><Post refreshPostsTrigger={postRefreshKey} id={null}/></div>
             
         </div>
        </>

@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import Comment from './Comment';
 import Pdf from '../pdf';
+import { Link } from 'react-router-dom';
 
 // eslint-disable-next-line react/prop-types
 export default function Post({ refreshPostsTrigger, userId, isBookmarked }) {
@@ -14,11 +15,13 @@ export default function Post({ refreshPostsTrigger, userId, isBookmarked }) {
   const [showOptions, setShowOptions] = useState(null);
   const menuRef = useRef(null);
   const BaseUrl = 'http://localhost:3000';
-  // const [showComment, setShowComment] = useState(false);
   const [openComments, setOpenComments] = useState(new Set());
+  const [followStates, setFollowStates] = useState({});
+
   const fetchPosts = useCallback(async () => {
     try {
       let res;
+ 
       if (userId && !isBookmarked) {
         res = await axiosInstance.get(`/posts/${userId}`);
       } else if (userId && isBookmarked) {
@@ -34,10 +37,28 @@ export default function Post({ refreshPostsTrigger, userId, isBookmarked }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshPostsTrigger]);
 
+
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
-
+  
+  useEffect(() => {
+    if (user && user.userId && posts.length > 0) {
+      console.log('User:', user);
+      console.log('Posts:', posts);
+      
+      const followStatesData = {};
+      posts.forEach(post => {
+        if (post.userId !== user.userId) {
+          console.log("Inside the loop - Post author:", post.userId, "Current user:", user.userId);
+          followStatesData[post.userId] = post.isFollowingAuthor === true;
+        }
+      });
+      
+      console.log('Follow states:', followStatesData);
+      setFollowStates(followStatesData);
+    }
+  }, [posts, user]);
 
   useEffect(() => {
     const handleClickOut = (e) => {
@@ -122,6 +143,46 @@ export default function Post({ refreshPostsTrigger, userId, isBookmarked }) {
     }
   };
 
+  const handleFollow = async (targetUserId) => {
+    try {
+      const isCurrentlyFollowing = followStates[targetUserId];
+      
+      if (isCurrentlyFollowing) {
+        await axiosInstance.delete(`/api/users/follow/${targetUserId}`);
+        setFollowStates(prev => ({
+          ...prev,
+          [targetUserId]: false
+        }));
+        // Update posts state to reflect the change
+        setPosts(prevPosts =>
+          prevPosts.map(post => {
+            if (post.userId === targetUserId) {
+              return { ...post, isFollowingAuthor: false };
+            }
+            return post;
+          })
+        );
+      } else {
+        await axiosInstance.post(`/api/users/follow/${targetUserId}`);
+        setFollowStates(prev => ({
+          ...prev,
+          [targetUserId]: true
+        }));
+        // Update posts state to reflect the change
+        setPosts(prevPosts =>
+          prevPosts.map(post => {
+            if (post.userId === targetUserId) {
+              return { ...post, isFollowingAuthor: true };
+            }
+            return post;
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Error following/unfollowing:', error);
+    }
+  };
+
   return (
     <div className="bg-zinc-950 px-2">
       {posts.map((post) => (
@@ -129,10 +190,16 @@ export default function Post({ refreshPostsTrigger, userId, isBookmarked }) {
           <div className='flex flex-row justify-between items-center'>
             <div className="flex gap-2 p-1 items-center">
               <div className="w-8 h-8 overflow-hidden rounded-full">
-                <img src={post.anonymousPfp} alt="user pfp"
+                <img src={`http://localhost:5173/${post.anonymousPfp}`} alt="user pfp"
                   className="w-full h-full scale-125 object-cover object-center" />
               </div>
-              <h3 className="font-bold text-[var(--accent-p)] text-left">{post.anonymousUsername}
+              <h3 className="font-bold text-[var(--accent-p)] text-left">
+                <Link 
+                  to={`/profile/${post.userId}`} 
+                  className="hover:text-[var(--accent-y)] transition-colors duration-200"
+                >
+                  {post.anonymousUsername}
+                </Link>
                 <p id="post-timestamp" className="text-white tracking-widest">{
                   new Date(post.createdAt).toLocaleString(undefined, {
                     year: 'numeric',
@@ -157,6 +224,16 @@ export default function Post({ refreshPostsTrigger, userId, isBookmarked }) {
                       <li className='text-red-400 hover:bg-zinc-800 p-1 rounded'>
                         <button className="cursor-pointer" onClick={() => handleDeletePost(post._id)}>
                           Delete post
+                        </button>
+                      </li>
+                    )}
+                    {user.userId !== post.userId && (
+                      <li className='text-[var(--accent-y)] hover:bg-zinc-800 p-1 rounded'>
+                        <button 
+                          className="cursor-pointer" 
+                          onClick={() => handleFollow(post.userId)}
+                        >
+                          {followStates[post.userId] ? 'Unfollow' : 'Follow'}
                         </button>
                       </li>
                     )}
