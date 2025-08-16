@@ -1,6 +1,7 @@
 import express from 'express';
-import User from './Models/user.js';
+import User from '../Models/user.js';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 
@@ -20,6 +21,65 @@ const authenticateToken = (req, res, next) => {
         next();
     });
 };
+
+export async function getAllUsers(req, res) {
+    try {
+        const currentUserId = req.user ? new mongoose.Types.ObjectId(req.user.userId) : null;
+        // console.log("Inside getAllUSers");
+        if (!currentUserId) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
+        const currentUser = await User.findById(currentUserId).select('following');
+        const followingIds = currentUser.following || [];
+
+        const users = await User.aggregate([
+            {
+                $match: {
+                    _id: { $ne: currentUserId } //remove yourself
+                }
+            },
+            {
+                $addFields: {
+                    isFollowing: {
+                        $in: ['$_id', followingIds]
+                    },
+    
+                    sortPriority: {
+                        $cond: [
+                            { $in: ['$_id', followingIds] },
+                            0, //priority based on following 
+                            1 
+                        ]
+                    }
+                }
+            },
+            {
+                $sort: {
+                    sortPriority: 1, //sort using priority
+                    anonymousUsername: 1 
+                }
+            },
+            {
+                $project: {
+                    anonymousUsername: 1,
+                    anonymousPfp: 1,
+                    bio: 1,
+                    followersCount: { $size: '$followers' },
+                    followingCount: { $size: '$following' },
+                    isFollowing: 1,
+                    createdAt: 1
+                }
+            }
+        ]);
+
+        res.json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+}
+
 
 router.get('/profile/:userId', authenticateToken, async (req, res) => {
     try {

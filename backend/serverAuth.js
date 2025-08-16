@@ -4,15 +4,15 @@ dotenv.config();
 
 import express from 'express';
 import cors from 'cors';
-import connectToDatabase from './db.js';
+import connectToDatabase from './Utils/db.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
 
 import User from './Models/user.js';
 import Token from './Models/tokens.js';
-import clgMail from './checkDomain.js';
-import { getRandomUsername, getRandomPfp } from './randomName.js';
+import clgMail from './Utils/checkDomain.js';
+import { getRandomUsername, getRandomPfp } from './Utils/randomName.js';
 
 const app = express();
 const client = new OAuth2Client(process.env.CLIENT_ID);
@@ -81,7 +81,7 @@ const deleteRefreshToken = async (token) =>{
 //         console.error("Token not deleted",err);
 //     }
 // }
-// // deleteRefreshTokenAll();
+// deleteRefreshTokenAll();
 
 app.post("/signup/google",async(req,res)=>{
     const {token} = req.body;

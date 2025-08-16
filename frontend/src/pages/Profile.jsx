@@ -1,6 +1,6 @@
 import Footer from '/src/components/Footer';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit, faUserPlus, faUserMinus } from '@fortawesome/free-solid-svg-icons';
+import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import Post from '/src/components/Post';
 import axiosInstance from '../../axiosInstance';
 import { useContext, useState, useEffect, useRef } from "react";

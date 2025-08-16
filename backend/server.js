@@ -4,13 +4,15 @@ import path from 'path';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import multer from 'multer';
+import { createServer } from 'http';
 
-import { getPosts } from './postController.js';
-import connectToDatabase from './db.js';
+import { getPosts } from './Controllers/postController.js';
+import connectToDatabase from './Utils/db.js';
 import Post from './Models/post.js';
-// import User from './Models/user.js';
-import postsRoute from './postsRoute.js';
-import userRoutes from './userRoutes.js';
+import postsRoute from './Routes/postsRoute.js';
+import chatRoute from './Routes/chatRoute.js';
+import userRoutes, { getAllUsers } from './Routes/userRoutes.js';
+import initSocket from './socket/socketServer.js';
 
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -21,11 +23,14 @@ const __dirname = dirname(__filename);
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
+
 app.use(cors());
 app.use(express.json());
 
 app.use('/api/posts', postsRoute); 
 app.use('/api/users', userRoutes);
+app.use('/api/chats', chatRoute);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 connectToDatabase();
@@ -59,6 +64,8 @@ const upload = multer({
     limits: { fileSize: 25 * 1024 * 1024 }, //25mb max
     fileFilter: fileFilter
 });
+
+app.get("/api/users/all", authenticateToken, getAllUsers);
 
 app.get("/posts", authenticateToken, getPosts);
 
@@ -117,6 +124,9 @@ export default function authenticateToken(req,res,next){
     });
 }
 
-app.listen(3000,()=>{
-    console.log("The server is running on port 3000");
+const io = initSocket(httpServer);
+
+
+httpServer.listen(3000, () => {
+  console.log("Server running on port 3000");
 });

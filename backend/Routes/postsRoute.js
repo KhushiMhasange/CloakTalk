@@ -1,9 +1,9 @@
 import express from 'express';
-import authenticateToken from './server.js';
-import Like from './Models/like.js';
-import Comment from './Models/comment.js';
-import Bookmark from './Models/bookmark.js';
-import { getComments, getPosts } from './postController.js';
+import authenticateToken from '../server.js';
+import Like from '../Models/like.js';
+import Comment from '../Models/comment.js';
+import Bookmark from '../Models/bookmark.js';
+import { getComments, getPosts } from '../Controllers/postController.js';
 
 const router = express.Router();
 router.use(authenticateToken);

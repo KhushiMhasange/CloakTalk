@@ -1,4 +1,4 @@
-import User from './Models/user.js';
+import User from '../Models/user.js';
 
 const adjectives = [
   "Silent", "Whispering", "Mystic", "Crimson", "Golden", "Emerald", "Blazing", "Frozen", "Dancing", "Jovial",

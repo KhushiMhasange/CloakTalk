@@ -152,7 +152,7 @@ export default function Feed() {
     const handleChatButton = () =>{
         navigate('/chat')
     }
-
+   
     return(
        <>
         <div className="Feed-page relative">
@@ -174,11 +174,11 @@ export default function Feed() {
                     <img src={user?.pfp} alt="user pfp"
                          className="w-full h-full scale-125 object-cover object-center cursor-pointer"/>
                     </div>   
-                    {showSettings && (<div className='absolute top-10 right-0 p-2 rounded-lg font-semibold text-black bg-[#f2eaa7] border-2 border-white w-40'>
+                    {showSettings && (<div className='absolute top-10 right-0 p-2 rounded-lg font-semibold text-zinc-900 bg-[#f2eaa7]  border-2 border-white w-40'>
                         <ul className='text-left'>
                             <li className='p-1 hover:text-[#e771a1]'><Link to='/profile'><FontAwesomeIcon icon={faUser} className='px-2'/>Profile</Link></li>
                             <li className='p-1 hover:text-[#e771a1]'><Link to='/profile'><FontAwesomeIcon icon={faGear} className='px-2' />Settings</Link></li>
-                            <li className='p-1 hover:text-[#e771a1]'><Link to='/profile'><FontAwesomeIcon icon={faStar} className='px-2' />About</Link></li>
+                            {/* <li className='p-1 hover:text-[#e771a1]'><Link to='/profile'><FontAwesomeIcon icon={faStar} className='px-2' />About</Link></li> */}
                             <li className='p-1 hover:text-[#e771a1]'><Link to='/bookmarks'><FontAwesomeIcon icon={faBookmark} className='px-2' />Bookmarks</Link></li>
                             <button className='p-1 text-[#e771a1] cursor-pointer' onClick={handleLogout}><FontAwesomeIcon icon={faDownload} className='px-2'/>Log out</button>
                         </ul>
@@ -254,7 +254,7 @@ export default function Feed() {
             <div className='fixed bottom-5 right-10'> 
                 <button className='
                     flex flex-col items-center gap-3 p-3
-                    bg-[var(--accent-p)]
+                    bg-gradient-to-r from-[var(--accent-p)] to-[var(--accent-y)]
                     rounded-full 
                     transform hover:scale-105 
                     transition-all duration-300 ease-in-out

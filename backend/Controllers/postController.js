@@ -1,9 +1,9 @@
-import Post from './Models/post.js';
-import Like from './Models/like.js';
-import Comment from './Models/comment.js';
-import Bookmark from './Models/bookmark.js';
+import Post from '../Models/post.js';
+import Like from '../Models/like.js';
+import Comment from '../Models/comment.js';
+import Bookmark from '../Models/bookmark.js';
 import mongoose from 'mongoose';
-import User from './Models/user.js';
+import User from '../Models/user.js';
 //aggregation in mongoDB - a way of processing large no. of documents by passing them thorugh different stages
 //the stages make up a pipeline The pipeline then performs successive transformations on the data until our goal is achieved.
 // This way, we can break down a complex query into easier stages, in each of which we complete a different operation on the data. 
