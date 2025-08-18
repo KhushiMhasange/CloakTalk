@@ -34,6 +34,7 @@ const initSocket = (httpServer) => {
     
     // Store user's current room
     socket.currentRoom = null;
+    socket.authorizedChats = new Set(); // which chats user is authorized to access
   
     socket.on('sendMessage', async ({ chatId, text }) => {
       try {
@@ -42,6 +43,12 @@ const initSocket = (httpServer) => {
         if (!chatId) {
           console.error('No chatId provided');
           socket.emit('error', { message: 'Chat ID is required' });
+          return;
+        }
+
+        if (!socket.authorizedChats.has(chatId)) {
+          console.error(`User ${socket.user.userId} not authorized for chat ${chatId}`);
+          socket.emit('error', { message: 'Not authorized for this chat' });
           return;
         }
 
@@ -70,11 +77,9 @@ const initSocket = (httpServer) => {
 
         const roomId = chatId.toString();
         
-        // Get all sockets in this room
         const room = io.sockets.adapter.rooms.get(roomId);
         console.log(`Emitting message to room ${roomId}. Users in room:`, room ? room.size : 0);
         
-        // Emit to the specific chat
         io.to(roomId).emit('message', messageToSend);
         console.log(`Message sent to room ${roomId}:`, messageToSend);
         
@@ -84,9 +89,15 @@ const initSocket = (httpServer) => {
       }
     });
 
-    socket.on('join', (roomId) => {
+    socket.on('join', async (roomId) => {
       try {
-     
+        const chat = await Chat.findById(roomId);
+        if (!chat || !chat.participants.includes(socket.user.userId)) {
+          console.error(`User ${socket.user?.userId} not authorized for chat ${roomId}`);
+          socket.emit('error', { message: 'Not authorized for this chat' });
+          return;
+        }
+
         if (socket.currentRoom) {
           socket.leave(socket.currentRoom);
           console.log(`User ${socket.user?.userId} left room: ${socket.currentRoom}`);
@@ -95,12 +106,14 @@ const initSocket = (httpServer) => {
         const roomIdStr = roomId.toString();
         socket.join(roomIdStr);
         socket.currentRoom = roomIdStr;
+
+        socket.authorizedChats.add(roomIdStr);
         
         console.log(`User ${socket.user?.userId} joined room: ${roomIdStr}`);
         
         const room = io.sockets.adapter.rooms.get(roomIdStr);
         console.log(`Room ${roomIdStr} now has ${room ? room.size : 0} users`);
-        
+
       } catch (error) {
         console.error('Error joining room:', error);
       }
@@ -110,6 +123,7 @@ const initSocket = (httpServer) => {
       try {
         const roomIdStr = roomId.toString();
         socket.leave(roomIdStr);
+        socket.authorizedChats.delete(roomIdStr);
         
         if (socket.currentRoom === roomIdStr) {
           socket.currentRoom = null;
@@ -128,6 +142,7 @@ const initSocket = (httpServer) => {
     
     socket.on('disconnect', () => {
       console.log("WebSocket disconnected! User ID:", socket.user?.userId);
+      socket.authorizedChats.clear();
       if (socket.currentRoom) {
         console.log(`User ${socket.user?.userId} was in room: ${socket.currentRoom}`);
       }

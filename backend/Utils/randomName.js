@@ -30,6 +30,12 @@ const Pfp =[
     'img/pfp/31.svg','img/pfp/32.svg'
 ]
 
+const GroupChatIcon = [
+  'chatIcon/pfp/1.svg','chatIcon/pfp/2.svg','chatIcon/pfp/3.svg','chatIcon/pfp/4.svg','chatIcon/pfp/5.svg','chatIcon/pfp/6.svg','chatIcon/pfp/7.svg','chatIcon/pfp/8.svg','chatIcon/pfp/9.svg','chatIcon/pfp/10.svg',
+  'chatIcon/pfp/11.svg','chatIcon/pfp/12.svg','chatIcon/pfp/13.svg','chatIcon/pfp/14.svg','chatIcon/pfp/15.svg','chatIcon/pfp/16.svg','chatIcon/pfp/17.svg','chatIcon/pfp/18.svg','chatIcon/pfp/19.svg','chatIcon/pfp/20.svg',
+  'chatIcon/pfp/21.svg','chatIcon/pfp/22.svg','chatIcon/pfp/23.svg','chatIcon/pfp/24.svg'
+];
+
 async function getRandomUsername() {
   let username;
   let isUnique = false;
@@ -50,5 +56,10 @@ function getRandomPfp(){
     return pfp; 
 }
 
-export { getRandomUsername, getRandomPfp };
+function getRandomGroupChatIcon(){
+  const pfp = GroupChatIcon[Math.floor(Math.random()*GroupChatIcon.length)];
+  return pfp; 
+}
+
+export { getRandomUsername, getRandomPfp, getRandomGroupChatIcon };
 

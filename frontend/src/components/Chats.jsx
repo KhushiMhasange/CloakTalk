@@ -4,13 +4,10 @@ import { useLocation } from 'react-router-dom';
 import axiosInstance from  '../../axiosInstance';
 import UserSearchTrigger from './UserSearch';
 import { io } from "socket.io-client";
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
 
-
+//you could use a better approach like dividing the code into smaller components, but for simplicity, we will keep it in one file
 export default function Chats() {
   const { user } = useContext(UserContext);
-  //info about the current url, like state data passed (during navigation)
   const location = useLocation(); 
   const [selectedChat, setSelectedChat] = useState(null);
   const [message, setMessage] = useState('');
@@ -42,7 +39,6 @@ export default function Chats() {
       
       if (err.message === "Unauthorized") {
         console.log("Token expired, reconnecting...");
-        //token expiration logic
       }
     });
 
@@ -53,7 +49,6 @@ export default function Chats() {
     socketRef.current.on('error', (error) => {
       console.error('Socket error:', error);
       
-      // Clean up temporary messages on error
       if (error.message === 'Failed to send message') {
         cleanupTempMessages();
       }
@@ -81,20 +76,53 @@ export default function Chats() {
     if (location.state?.selectedUser) {
       const selectedUser = location.state.selectedUser;
       
-      const existingChat = chatUsers.find(chatUser => 
-        chatUser.userId === selectedUser._id
-      );
-      
-      if (existingChat) {
-        setSelectedChat(existingChat);
-        fetchMessages(existingChat.chatId);
+      if (location.state.isGroupChat) {
+        const existingGroupChat = chatUsers.find(chat => 
+          chat.isGroupChat && chat.participants?.some(p => p.userId === selectedUser._id)
+        );
+        
+        if (existingGroupChat) {
+          setSelectedChat(existingGroupChat);
+          fetchMessages(existingGroupChat.chatId);
+        } else {
+          fetchChats();
+        }
       } else {
-        createNewChat(selectedUser);
+        const existingChat = chatUsers.find(chatUser => 
+          !chatUser.isGroupChat && chatUser.userId === selectedUser._id
+        );
+        
+        if (existingChat) {
+          setSelectedChat(existingChat);
+          fetchMessages(existingChat.chatId);
+        } else {
+          createNewChat(selectedUser);
+        }
       }
       
       window.history.replaceState({}, document.title);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatUsers, location.state]);
+
+  const fetchChats = async () => {
+    try {
+      const res = await axiosInstance.get(`/api/chats`);
+      setChatUsers(res.data);
+      
+      if (location.state?.isGroupChat && location.state?.selectedChatId) {
+        const newGroupChat = res.data.find(chat => 
+          chat.chatId === location.state.selectedChatId
+        );
+        if (newGroupChat) {
+          setSelectedChat(newGroupChat);
+          fetchMessages(newGroupChat.chatId);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching chats:", err);
+    }
+  };
 
   const createNewChat = async (selectedUser) => {
     try {
@@ -103,6 +131,8 @@ export default function Chats() {
       });
       
       const newChat = {
+        chatId: response.data.chatId,
+        isGroupChat: false,
         userId: selectedUser._id,
         username: selectedUser.anonymousUsername,
         pfp: selectedUser.anonymousPfp,
@@ -110,8 +140,7 @@ export default function Chats() {
         followingCount: selectedUser.followingCount,
         lastMessage: 'Start your conversation...',
         timestamp: new Date(),
-        unread: 0,
-        chatId: response.data.chatId
+        unread: 0
       };
       
       setChatUsers(prev => [...prev, newChat]);
@@ -135,7 +164,6 @@ export default function Chats() {
     }
   };
 
-
   const handleSendMessage = () => {
     if (message.trim() && selectedChat) {
       const tempId = `temp_${Date.now()}_${Math.random()}`;
@@ -149,7 +177,7 @@ export default function Chats() {
         isCurrentUser: true,
         isTemp: true
       };
-
+      //sending the message to the server
       socketRef.current?.emit('sendMessage', {
         chatId: selectedChat.chatId, 
         text: message.trim()
@@ -187,13 +215,11 @@ export default function Chats() {
 
   useEffect(() => {
     if (socketRef.current) {
-      //reciving message
+      //emiting messages to all the users in the room
       socketRef.current.on('message', (message) => {
-        
         setMessages(prev => {
           const chatId = message.chatId;
           
-          // replace temp message
           const isFromCurrentUser = message.senderId === user?.userId;
           
           if (isFromCurrentUser) {
@@ -223,7 +249,6 @@ export default function Chats() {
             }
           }
           
-          // Check if message already exists 
           const existingMessage = prev[chatId]?.find(msg => 
             msg.id === message.id
           );
@@ -250,10 +275,8 @@ export default function Chats() {
           };
         });
       });
-
     }
-  }, [socketRef.current, selectedChat, user?.userId]);
-
+  }, [selectedChat, user?.userId]);
 
   const cleanupTempMessages = () => {
     setMessages(prev => {
@@ -271,17 +294,14 @@ export default function Chats() {
     }
   }, [selectedChat]);
 
-  // Add room check to selectChat
   const selectChat = (chatUser) => {
     console.log('Selecting chat:', chatUser);
     
-    // Leave previous chat 
     if (selectedChat?.chatId) {
       console.log('Leaving previous chat room:', selectedChat.chatId);
       socketRef.current?.emit('leave', selectedChat.chatId);
     }
     
-    // Join new chat room
     console.log('Joining chat room:', chatUser.chatId);
     socketRef.current?.emit('join', chatUser.chatId);
     
@@ -316,51 +336,60 @@ export default function Chats() {
               display: none;
             }
             .hide-scrollbar {
-              -ms-overflow-style: none; /* IE and Edge */
-              scrollbar-width: none; /* Firefox */
+              -ms-overflow-style: none;
+              scrollbar-width: none;
             }
           `,
         }}
       />
+      
       {/* Chat List */}
       <div className="w-full md:w-1/3 border-r border-zinc-700 flex flex-col">
         <div className="flex justify-between p-3 border-b border-zinc-700">
-          <h1 className="flex  gap-2 text-2xl font-bold bg-[var(--accent-y)] bg-clip-text text-transparent">
+          <h1 className="flex gap-2 text-2xl font-bold bg-[var(--accent-y)] bg-clip-text text-transparent">
             <img src="./img/CloakTalk.png" alt="logo" className='w-8 h-8 rounded-full' />Messages
           </h1>  
-            <UserSearchTrigger/>
+          <UserSearchTrigger/>
         </div>
 
         <div className="flex-1 overflow-y-auto">
           {chatUsers.map((chatUser) => (
             <div
-              key={chatUser.userId}
+              key={chatUser.chatId}
               onClick={() => selectChat(chatUser)}
               className={`p-4 cursor-pointer transition-all duration-200 hover:bg-zinc-700/50 border-b border-zinc-700/50 ${
-                selectedChat?.userId === chatUser.userId 
+                selectedChat?.chatId === chatUser.chatId 
                   ? 'bg-gradient-to-r from-zinc-800/50 border-r-4 border-[#e771a1]' 
                   : ''
               }`}
             >
               <div className="flex items-center space-x-3">
                 <div className="relative">
-                  <div className="w-12 h-12 overflow-hidden rounded-full border-2 border-[var(--accent-p)] shadow-lg transform transition-all duration-300 hover:scale-105">
-                 <img src={chatUser.pfp || '/img/user.svg'} alt={chatUser.username} className="w-full h-full scale-125 object-cover object-center" />
-                 </div>
-                  {/* <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#121212]"></div> */}
+                    <div className="w-12 h-12 overflow-hidden rounded-full border-2 border-[var(--accent-p)] shadow-lg transform transition-all duration-300 hover:scale-105">
+                      <img src={chatUser.isGroupChat ? chatUser.groupPfp: chatUser.pfp} alt={chatUser.isGroupChat ? chatUser.groupName : chatUser.username} className="w-full h-full scale-125 object-cover object-center" />
+                    </div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-white truncate">{chatUser.username}</h3>
-                    <span className="text-xs text-zinc-400">{formatTime(chatUser.timestamp)}</span>
+                    <h3 className="font-semibold text-white truncate">
+                      {chatUser.isGroupChat ? chatUser.groupName : chatUser.username}
+                    </h3>
+                    {chatUser.isGroupChat && (
+                      <span className="text-[10px] text-zinc-300 bg-zinc-700 px-2 py-1 rounded-full">
+                        {chatUser.participantCount} members
+                      </span>
+                    )}
                   </div>
-                  <p className="text-sm text-zinc-400 truncate text-left">{chatUser.lastMessage}</p>
+                  <div className="flex items-center gap-2 justify-between">
+                    <p className="text-sm text-zinc-400 truncate text-left">{chatUser.lastMessage}</p>
+                    <span className="text-xs text-zinc-400 pr-1">{formatTime(chatUser.timestamp)}</span>
+                  </div>
                 </div>
-                {chatUser.unread > 0 && (
+                {/* {chatUser.unread > 0 && (
                   <div className="w-5 h-5 bg-[#e771a1] rounded-full flex items-center justify-center">
                     <span className="text-xs font-bold text-white">{chatUser.unread}</span>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
           ))}
@@ -375,25 +404,51 @@ export default function Chats() {
               <div className="flex items-center space-x-3">
                 <button 
                   onClick={() => setSelectedChat(null)}
-                  className=" md:hidden p-2 hover:bg-zinc-800 rounded-full transition-colors"
+                  className="md:hidden p-2 hover:bg-zinc-800 rounded-full transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentcolor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
+                
                 <div className="w-12 h-12 overflow-hidden rounded-full border-2 border-[var(--accent-p)] shadow-lg transform transition-all duration-300 hover:scale-105">
-                 <img src={selectedChat.pfp || '/img/user.svg'} alt={selectedChat.username} className="w-full h-full scale-125 object-cover object-center" />
-                 </div>
-                <div>
-                  <h2 className="font-semibold text-white">{selectedChat.username}</h2>
-                  {/* <p className="text-sm text-green-500">Online</p> */}
+                      <img src={selectedChat.isGroupChat ? selectedChat.groupPfp: selectedChat.pfp} alt={selectedChat.isGroupChat ? selectedChat.groupName : selectedChat.username} className="w-full h-full scale-125 object-cover object-center" />
+                  </div>
+                
+                <div className="flex-1">
+                  <h2 className="font-semibold text-white text-left">
+                    {selectedChat.isGroupChat ? selectedChat.groupName : selectedChat.username}
+                  </h2>
+                  {selectedChat.isGroupChat && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-zinc-400">{selectedChat.participantCount} members</span>
+                      <span className="text-xs text-zinc-500">•</span>
+                      <div className="flex space-x-1 truncate max-w-[580px]">
+                        {selectedChat.participants?.slice(0, 3).map((participant) => (
+                          <div key={participant.userId} className="flex items-center space-x-1">
+                            <div className="w-6 h-6 overflow-hidden rounded-full border-2 border-zinc-800">
+                              <div className="overflow-hidden rounded-full">
+                                <img src={participant.pfp || '/img/user.svg'} 
+                                     alt={participant.username}  className="w-full h-full scale-125 object-cover object-center" />
+                              </div>
+                            </div>
+                          <p className='text-white text-[10px]'>{participant.username}</p>
+                          </div>
+                        ))}
+                        {selectedChat.participants && selectedChat.participants.length > 3 && (
+                          <div className="w-6 h-6 bg-zinc-700 rounded-full border-2 border-zinc-800 flex items-center justify-center">
+                            <span className="text-xs text-zinc-400">+{selectedChat.participants.length - 3}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-      
-            <div className="flex-1 overflow-y-scroll  hide-scrollbar p-4 space-y-4">
-              {(messages[selectedChat.chatId] || []).map((msg, index) => (
+            <div className="flex-1 overflow-y-scroll hide-scrollbar p-4 space-y-4">
+              {(messages[selectedChat.chatId] || []).map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex animate-fade-in-up ${msg.isCurrentUser ? 'justify-end' : 'justify-start'}`}
@@ -403,8 +458,28 @@ export default function Chats() {
                       ? 'bg-gradient-to-r from-[#9a4567] to-[#f995bd] text-right rounded-br-md'
                       : 'bg-zinc-800 rounded-bl-md text-left'
                   }`}>
+                    {!msg.isCurrentUser && selectedChat.isGroupChat && (
+                      <div className="flex items-center text-xs text-zinc-400 mb-1 font-normal">
+                        {(() => {
+                          const participant = selectedChat.participants?.find(p => p.userId === msg.senderId);
+                          if (participant) {
+                            return (
+                              <>
+                                <div className="overflow-hidden rounded-full w-5 h-5 mr-1">
+                                  <img src={participant.pfp || '/img/user.svg'} 
+                                       alt={participant.username}  
+                                       className="w-full h-full scale-125 object-cover object-center" />
+                                </div>
+                                <span>{participant.username}</span>
+                              </>
+                            );
+                          }
+                          return 'Unknown';
+                        })()}
+                      </div>
+                    )}
                     <p className="text-sm">{msg.message}</p>
-                    <p className={`text-xs mt-1 ${msg.isCurrentUser ? 'text-zinc-300 text-right ' : 'text-zinc-400'}`}>
+                    <p className={`text-xs mt-1 ${msg.isCurrentUser ? 'text-zinc-300 text-right' : 'text-zinc-400'}`}>
                       {formatTime(msg.timestamp)}
                     </p>
                   </div>
@@ -422,7 +497,7 @@ export default function Chats() {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyUp={handleKeyPress}
-                    placeholder="Type a message..."
+                    placeholder={`Type a message${selectedChat.isGroupChat ? ' to the group' : ''}...`}
                     className={`w-full px-4 py-3 bg-zinc-900 text-white rounded-xl border border-zinc-700 focus:outline-none focus:ring-1 focus:ring-[var(--accent-p)] transition-all`}
                   />
                 </div>
@@ -450,6 +525,5 @@ export default function Chats() {
         )}
       </div>
     </div>
-
   );
 }

@@ -7,6 +7,18 @@ const chatSchema = new mongoose.Schema({
     ref: 'users',
     required: true
   }],
+  isGroupChat: {
+    type: Boolean,
+    default: false
+  },
+  groupName: {
+    type: String,
+    default: ''
+  },
+  groupPfp: {
+    type: String,
+    required: true,
+  },
   lastMessage: {
     text: {
       type: String,
