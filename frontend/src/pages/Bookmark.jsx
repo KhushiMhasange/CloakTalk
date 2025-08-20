@@ -26,7 +26,7 @@ export default function Bookmarks() {
         </div>
         <div className='flex flex-col items-center'>
         <h1 className='text-2xl font-bold text-[var(--accent-p)] flex gap-2'>Your Bookmarks <img src="img/bookmarkFilled.svg" alt="bookmark svg" className='w-8 h-8' /> </h1>
-            <div className='mt-8 p-4 items-center rounded-3xl w-full max-w-3xl bg-zinc-900'>
+            <div className='mt-8 p-3 items-center rounded-3xl w-full max-w-4xl bg-zinc-900'>
                 <div className="p-1 bg-zinc-900 rounded-2xl border border-gray-200 shadow-inner">
                     <Post refreshPostsTrigger={0} userId={user.userId} isBookmarked={true} />
                 </div>

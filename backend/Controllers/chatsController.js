@@ -5,7 +5,7 @@ export default async function createOrGetChat(req, res) {
     try {
         const currentUserId = req.user.userId;
         const { participantId } = req.body;
-
+        console.log("Participant ID:", participantId);
         if (!participantId) {
             return res.status(400).json({ message: 'Participant ID is required' });
         }
@@ -18,6 +18,7 @@ export default async function createOrGetChat(req, res) {
         });
 
         if (existingChat) {
+            console.log(`Found existing chat for user ${currentUserId} with participant ${participantId}`);
             return res.json({ 
                 chatId: existingChat._id,
                 chat: existingChat,

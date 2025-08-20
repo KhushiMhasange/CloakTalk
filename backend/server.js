@@ -73,7 +73,7 @@ app.get("/posts/:userid",authenticateToken,getPosts);
 
 app.post('/posts',authenticateToken,upload.single('media'),async (req,res)=>{
   const { userId,anonymousUsername,anonymousPfpUrl } = req.user;
-  const { content } = req.body;
+  const { content, tags } = req.body;
   const mediaPath = req.file ? `/uploads/${req.file.filename}` : null; // Get path if file exists
   const mediaType = req.file ? req.file.mimetype : null; 
   
@@ -84,6 +84,7 @@ app.post('/posts',authenticateToken,upload.single('media'),async (req,res)=>{
     content: content,
     mediaPath: mediaPath,
     mediaType: mediaType,
+    tags: Array.isArray(tags) ? tags : (typeof tags === 'string' && tags.length ? tags.split(',').map(t=>t.trim()).filter(Boolean) : [])
   });
   
   const saveData = await newPost.save();

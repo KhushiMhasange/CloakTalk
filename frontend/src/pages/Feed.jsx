@@ -5,17 +5,19 @@ import axiosInstance from  '../../axiosInstance';
 import { Link,useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUser, faGear,faDownload,faStar,faBookmark } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faGear,faDownload,faBookmark } from '@fortawesome/free-solid-svg-icons';
 
 export default function Feed() {
     
     const {user,setUser} = useContext(UserContext);
     const [content, setContent] = useState("");
     const [media, setMedia] = useState(null);
-    const [preview, setPreview] = useState(null);
+    const [preview, setPreview] = useState(null); 
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [selectedTags, setSelectedTags] = useState([]);
     const [postRefreshKey, setPostRefreshKey] = useState(0);
     const [showSettings,setShowSettings] = useState(false);
+    const [activeTab, setActiveTab] = useState('For you');
     const pfpRef = useRef(null);
     const fileInputRef = useRef(null);
     const navigate = useNavigate();
@@ -29,6 +31,7 @@ export default function Feed() {
             document.addEventListener('mousedown',handleClickOut);
             return() => document.removeEventListener('mousedown',handleClickOut);
     },[showSettings]);
+
 
     useEffect(() => {
         return () => {
@@ -50,6 +53,9 @@ export default function Feed() {
         }
         if (content){  
         formData.append('content', content);
+        }
+        if (selectedTags.length > 0) {
+            selectedTags.forEach(tag => formData.append('tags', tag));
         }
 
         try {
@@ -101,10 +107,20 @@ export default function Feed() {
         setMedia(null);
         setPreview(null);
         setUploadProgress(0);
+        setSelectedTags([]);
         if (fileInputRef.current) {
             fileInputRef.current.value = ''; 
         }
     }
+    const availableTags = ['Resources','Generic','Rant','Advice','Yap'];
+
+    const toggleTag = (tag) => {
+        setSelectedTags(prev => prev.includes(tag)
+            ? prev.filter(t => t !== tag)
+            : [...prev, tag]
+        );
+    };
+
     
      const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -162,17 +178,28 @@ export default function Feed() {
                     {/* <h3 className="p-1 font-bold text-xl text-[var(--accent-y)] "> </h3> */}
                 </div>
                 <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl">
-                    <ul className="flex gap-2 p-2 rounded-t-sm justify-start font-bold bg-zinc-900/50 backdrop-blur-md">
-                        <li className="p-1 px-2 bg-zinc-950  rounded-sm">For you</li>
-                        <li className="p-1 px-2 bg-zinc-950 rounded-sm">Resources</li>
-                        <li className="p-1 px-2 bg-zinc-950 rounded-sm">Yap</li>
-                    </ul>
+                    <div className="flex justify-left py-2 rounded-t-sm bg-zinc-900/30 backdrop-blur-md">
+                        {['For you','Following','Resources', 'Yap'].map(tab => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`py-1 px-6 text-lg font-semibold transition-colors duration-200 ${
+                                    activeTab === tab
+                                    ? 'text-white  border-b-2 border-[var(--accent-p)]'
+                                    : 'text-gray-500 hover:text-white'
+                                }`}
+                            >
+                                {tab}
+                            </button>
+
+))}
+                    </div>
                 </div>
                 <div className="group relative flex gap-2 right-28" ref={pfpRef} onClick={()=>setShowSettings(showSettings===false?true:false)}>
                     <h3 className="p-1 font-bold text-[var(--accent-p)] cursor-pointer">{user?.username}</h3>
                     <div className="w-8 h-8 overflow-hidden rounded-full">
-                    <img src={user?.pfp} alt="user pfp"
-                         className="w-full h-full scale-125 object-cover object-center cursor-pointer"/>
+                    <img src={user?.pfp || "img/user.svg"} alt="user pfp"
+                         className="text-white w-full h-full scale-125 object-cover object-center cursor-pointer"/>
                     </div>   
                     {showSettings && (<div className='absolute top-10 right-0 p-2 rounded-lg font-semibold text-zinc-900 bg-[#f2eaa7]  border-2 border-white w-40'>
                         <ul className='text-left'>
@@ -235,18 +262,26 @@ export default function Feed() {
                                 {uploadProgress > 0 && uploadProgress < 100 && (
                                     <span className="text-sm text-zinc-400 mr-2">{uploadProgress}%</span>
                                 )}
-                                <button className="px-4 mx-2 font-bold rounded-xl text-[#e771a1] border-2 border-zinc-100 cursor-pointer bg-[var(--accent-y)] transition hover:scale-94 disabled:opacity-80"
+                                <button className="px-4 py-1 mx-2 font-bold rounded-xl text-[#e771a1] border-2 border-zinc-100 cursor-pointer bg-[var(--accent-y)] transition hover:scale-94 disabled:opacity-80"
                                     onClick={handleSubmitPost}
                                     disabled={!content.trim()  || uploadProgress > 0} >
                                     {uploadProgress > 0 ? 'Uploading...' : 'Post'}
                                 </button>
                             </div>
                     </div>
-                    <ul className="tags flex gap-2 p-1 pt-2">
-                        <li className="px-2 bg-zinc-900  rounded-sm">#Resources</li>
-                        <li className="px-2 bg-zinc-900  rounded-sm">#General</li>
-                        <li className="px-2 bg-zinc-900  rounded-sm">#Rant</li>
-                        <li className="px-2 bg-zinc-900  rounded-sm">#Advice</li>
+                    <ul className="tags flex gap-2 p-1 pt-2 flex-wrap">
+                        {availableTags.map(tag => (
+                            <li
+                              key={tag}
+                              onClick={() => toggleTag(tag)}
+                              className={`px-2 rounded-sm cursor-pointer border-1 border-zinc-800  ${selectedTags.includes(tag)
+                                ? 'bg-[#f57fae] text-white'
+                                : 'bg-zinc-900 text-white hover:bg-zinc-800'}
+                              `}
+                            >
+                              {tag}
+                            </li>
+                        ))}
                     </ul>
                 </div>
             </div>
@@ -269,8 +304,12 @@ export default function Feed() {
                     />
                 </button>
             </div>
-
-            <div className="bg-zinc-900 rounded w-full max-w-3xl mx-auto p-2 mt-1"><Post refreshPostsTrigger={postRefreshKey} id={null}/></div>
+            {/* <div className="flex justify-between items-center px-4 py-2 bg-zinc-900 rounded-t-lg">
+                <button onClick={() => setPostRefreshKey(prevKey => prevKey + 1)} className="text-sm text-[var(--accent-p)] hover:underline">
+                    Refresh
+                </button>
+            </div> */}
+            <div className="bg-zinc-900 rounded w-full max-w-3xl mx-auto p-2 mt-1"><Post key={activeTab} refreshPostsTrigger={postRefreshKey} tab={activeTab} id={null}/></div>
             
         </div>
        </>

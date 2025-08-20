@@ -66,7 +66,7 @@ const UserSearch = ({ onClose, groupChat }) => {
         });
 
         const chatId = response.data.chatId;
-        const token = localStorage.getItem('token');
+    
 
         onClose();
 
@@ -354,7 +354,7 @@ const UserItem = ({ user, isFollowing, onFollow, onStartChat, groupChat, isSelec
           }}
           className={`ml-3 px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 ${isFollowing
               ? 'bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700'
-              : 'bg-gradient-to-r from-[#9a4567] to-[#f995bd]  text-white hover:from-[#d46590] hover:to-[#ffb3d1] shadow-lg hover:scale-95'
+              : 'bg-gradient-to-r from-[#e771a1] to-[#f9accb]  text-white hover:from-[#d46590] hover:to-[#fba0c4] shadow-lg hover:scale-95'
             }`}
         >
           {isFollowing ? 'Unfollow' : 'Follow'}
@@ -386,3 +386,4 @@ export default function UserSearchTrigger() {
     </>
   );
 }
+

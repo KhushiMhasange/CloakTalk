@@ -22,6 +22,10 @@ const postSchema = new mongoose.Schema({
     mediaType:{
          type:String,
     },
+    tags: {
+        type: [String],
+        default: []
+    },
     },
     { timestamps: true }
 );

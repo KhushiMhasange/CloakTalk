@@ -207,7 +207,7 @@ function generateAccessToken(user){
     anonymousUsername: user.anonymousUsername, 
     anonymousPfpUrl: user.anonymousPfp, 
     };
-    return jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET,{expiresIn:"20m"});
+    return jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET,{expiresIn:"30m"});
 }
 
 //generating new access token when expired using refresh tokens(also authenticate refresh token)

@@ -19,6 +19,7 @@ export default function Profile() {
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bioText, setBioText] = useState("");
   const bioTextareaRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('posts');
 
   const targetUserId = userId || user?.userId;
   const isOwnProfile = !userId || userId === user?.userId;
@@ -42,7 +43,6 @@ export default function Profile() {
           followersCount: userData.followersCount,
           isFollowing: userData.isFollowing
         };
-        // console.log("Setting profileUser to:", profileData);
         setProfileUser(profileData);
         setIsFollowing(userData.isFollowing);
         setFollowingCount(userData.followingCount);
@@ -111,6 +111,31 @@ export default function Profile() {
     }
   };
 
+    const handleStartChat = async (profileUser) => {
+        try {
+          console.log('Starting chat with user:', profileUser.userId);
+          const response = await axiosInstance.post('/api/chats/create-or-get', {
+            participantId: profileUser.userId
+          });
+          const chatId = response.data.chatId;
+          navigate('/chat', {
+            state: {
+              selectedChatId: chatId,
+              selectedUser: profileUser
+            }
+          });
+  
+        } catch (error) {
+          console.error('Error starting chat:', error);
+          navigate('/chat', {
+            state: {
+              selectedUser: profileUser
+            }
+          });
+        }
+    };
+  
+
   const handleBioCancel = () => {
     setIsEditingBio(false);
     setBioText("");
@@ -146,7 +171,7 @@ export default function Profile() {
         </div>
       </div>
       <div className="flex flex-col items-center">
-        <div className='mt-8 p-4 items-center rounded-3xl w-full max-w-4xl bg-zinc-900'>
+        <div className='mt-8 p-3 items-center rounded-3xl w-full max-w-4xl bg-zinc-900'>
           <div className="w-full max-w-4xl bg-zinc-950 border border-white p-8 pb-6 rounded-2xl shadow-xl animate-fade-in-up">
             <div className='flex items-center gap-8'>
               <div className="w-40 h-40 sm:w-48 sm:h-48 overflow-hidden rounded-full border-4 border-[var(--accent-p)] shadow-lg transform transition-all duration-300 hover:scale-105">
@@ -201,48 +226,71 @@ export default function Profile() {
                 
                 <div className="flex gap-8 mt-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-[var(--accent-p)]">{profileUser.followingCount}</div>
+                    <div className="text-2xl font-bold text-[var(--accent-p)]">{followingCount}</div>
                     <div className="text-sm text-gray-300">Following</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-[var(--accent-p)]">{profileUser.followersCount}</div>
+                    <div className="text-2xl font-bold text-[var(--accent-p)]">{followersCount}</div>
                     <div className="text-sm text-gray-300">Followers</div>
                   </div>
                   {!isOwnProfile && (
+                    <div className='flex gap-8'>
                     <button
                     onClick={handleFollow}
-                    className={`
-                      px-6 py-2 rounded-3xl border-2 font-semibold text-white
-                      transition-all duration-300 ease-out
-                      shadow-lg hover:shadow-2xl
-                      transform hover:scale-105 hover:-translate-y-1
-                      active:scale-95 active:translate-y-0
-                      relative overflow-hidden
-                      bg-[#e771a1]
-                      before:absolute before:inset-0 before:bg-white/20 before:transform before:scale-0
-                      before:transition-transform before:duration-300 before:rounded-3xl
-                      hover:before:scale-100
-                    `}
+                     className={`ml-3 px-6 py-2 my-2 rounded-xl cursor-pointer font-bold text-md transition-all hover:scale-95 duration-200 ${isFollowing
+                      ? 'bg-zinc-900 text-white hover:bg-zinc-800 border border-zinc-800'
+                      : 'bg-gradient-to-r from-[#e771a1] to-[#f9accb]  text-white hover:from-[#d46590] hover:to-[#fba0c4] shadow-lg' 
+                    }`}
                   >
                     <span className="relative z-10">
                       {isFollowing ? 'Unfollow' : 'Follow'}
                     </span>
                   </button>
-                
+                  <button onClick={()=>handleStartChat(profileUser)} className="px-6 py-2 my-2 rounded-xl font-bold cursor-pointer text-md bg-gradient-to-r from-[#e771a1] to-[#f9accb] text-white hover:from-[#d46590] hover:to-[#fba0c4] shadow-lg hover:scale-95 transition-all">
+                      Message
+                  </button>
+                  </div>
                   )}
+                  <div>  
+                  </div>
                 </div>
                 
                 
               </div>
             </div>
-            <div className="flex justify-center text-xl pt-2">
-              <div className=''>
-              <span className='bg-zinc-900 p-2 px-4 rounded-l-xl'>Posts</span>
-              <span className='bg-zinc-900 p-2 px-4 rounded-r-xl'>Replies</span>
-              </div>   
+            <div className="mt-4">
+              <div className="flex justify-center border-b-1 border-zinc-700 ">
+                <button
+                  onClick={() => setActiveTab('posts')}
+                  className={`py-3 px-6 text-lg font-semibold transition-colors duration-200 cursor-pointer ${
+                    activeTab === 'posts'
+                      ? 'text-white border-b-2 border-[var(--accent-p)]'
+                      : 'text-gray-500 hover:text-white'
+                  }`}
+                >
+                  Posts
+                </button>
+                <button
+                  onClick={() => setActiveTab('replies')}
+                  className={`py-3 px-6 text-lg font-semibold transition-colors duration-200 cursor-pointer ${
+                    activeTab === 'replies'
+                      ? 'text-white border-b-2 border-[var(--accent-p)]'
+                      : 'text-gray-500 hover:text-white'
+                  }`}
+                >
+                  Replies
+                </button>
+              </div>
             </div>
-            <div className="p-4 bg-zinc-900 rounded-b-2xl border border-zinc-800 shadow-inner">
-              <Post refreshPostsTrigger={0} userId={profileUser.userId} />
+            <div className="mt-1 p-2 bg-zinc-950 rounded-b-2xl shadow-inner min-h-[200px]">
+              {activeTab === 'posts' && (
+                <Post refreshPostsTrigger={0} userId={profileUser.userId} />
+              )}
+              {activeTab === 'replies' && (
+                <div className="text-center text-gray-400 pt-8">
+                  Replies will be shown here.
+                </div>
+              )}
             </div>
           </div>
         </div>

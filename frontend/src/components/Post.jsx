@@ -8,26 +8,65 @@ import Pdf from '../pdf';
 import { Link } from 'react-router-dom';
 
 // eslint-disable-next-line react/prop-types
-export default function Post({ refreshPostsTrigger, userId, isBookmarked }) {
+export default function Post({ refreshPostsTrigger, userId, isBookmarked,tab}) {
 
-  const [posts, setPosts] = useState([]);
-  const { user } = useContext(UserContext);
+  const [posts, setPosts] = useState([]); 
   const [showOptions, setShowOptions] = useState(null);
+  const { user } = useContext(UserContext);
   const menuRef = useRef(null);
   const BaseUrl = 'http://localhost:3000';
   const [openComments, setOpenComments] = useState(new Set());
   const [followStates, setFollowStates] = useState({});
 
+  const renderLinkedText = (text) => {
+    if (!text) return null;
+    const urlMatcher = /(https?:\/\/[^\s]+|www\.[^\s]+)/i;
+    const strictUrl = /^(https?:\/\/[^\s]+|www\.[^\s]+)$/i;
+
+    const lines = text.split('\n');
+    return lines.map((line, lineIdx) => (
+      <span key={`line-${lineIdx}`}>
+        {line
+          .split(urlMatcher)
+          .map((part, idx) => {
+            if (!part) return null;
+            if (strictUrl.test(part)) {
+              const href = part.startsWith('http') ? part : `https://${part}`;
+              return (
+                <a
+                  key={`url-${lineIdx}-${idx}`}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-[var(--accent-y)] hover:border-[var(--accent-y)] border-b-1 border-[var(--accent-p)] transition-all transition-200ms"
+                >
+                  {part}
+                </a>
+              );
+            }
+            return <span key={`txt-${lineIdx}-${idx}`}>{part}</span>;
+          })}
+        {lineIdx < lines.length - 1 && <br />}
+      </span>
+    ));
+  };
+
   const fetchPosts = useCallback(async () => {
     try {
       let res;
  
-      if (userId && !isBookmarked) {
+      if (userId && !isBookmarked ) {
         res = await axiosInstance.get(`/posts/${userId}`);
-      } else if (userId && isBookmarked) {
+      } else if (userId && isBookmarked ) {
         res = await axiosInstance.get(`/api/posts/bookmarks?bookmarked=true`);
+      } else if( tab === 'Yap') {
+        res = await axiosInstance.get('/posts/yap');
+      }else if (tab === 'Following') {
+        res = await axiosInstance.get('/api/posts/following');    
+      } else if (tab === 'Resources') {
+        res = await axiosInstance.get('/api/posts/resources');
       } else {
-        res = await axiosInstance.get('/posts');
+        res = await axiosInstance.get('/posts/');  
       }
       setPosts(res.data);
     }
@@ -44,18 +83,18 @@ export default function Post({ refreshPostsTrigger, userId, isBookmarked }) {
   
   useEffect(() => {
     if (user && user.userId && posts.length > 0) {
-      console.log('User:', user);
-      console.log('Posts:', posts);
+      // console.log('User:', user);
+      // console.log('Posts:', posts);
       
       const followStatesData = {};
       posts.forEach(post => {
         if (post.userId !== user.userId) {
-          console.log("Inside the loop - Post author:", post.userId, "Current user:", user.userId);
+          // console.log("Inside the loop - Post author:", post.userId, "Current user:", user.userId);
           followStatesData[post.userId] = post.isFollowingAuthor === true;
         }
       });
       
-      console.log('Follow states:', followStatesData);
+      // console.log('Follow states:', followStatesData);
       setFollowStates(followStatesData);
     }
   }, [posts, user]);
@@ -201,10 +240,10 @@ export default function Post({ refreshPostsTrigger, userId, isBookmarked }) {
                   {post.anonymousUsername}
                 </Link>
                 <p id="post-timestamp" className="text-white tracking-widest">{
-                  new Date(post.createdAt).toLocaleString(undefined, {
-                    year: 'numeric',
-                    month: '2-digit',
+                  new Date(post.createdAt).toLocaleString('en-GB', {
                     day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit',
                     hour12: true
@@ -243,7 +282,12 @@ export default function Post({ refreshPostsTrigger, userId, isBookmarked }) {
             </div>
           </div>
           <div>
-            <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'Lato, sans-serif' }} className="text-left p-1">{post.content} </pre>
+            <div
+              style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'Lato, sans-serif' }}
+              className="text-left p-1"
+            >
+              {renderLinkedText(post.content)}
+            </div>
           </div>
 
           {post.mediaPath && post.mediaType && (

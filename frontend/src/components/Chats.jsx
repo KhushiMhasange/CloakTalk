@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useContext } from 'react';
 import {UserContext} from '../context/userContext';
 import { useLocation } from 'react-router-dom';
+import axios from 'axios';
 import axiosInstance from  '../../axiosInstance';
 import UserSearchTrigger from './UserSearch';
 import { io } from "socket.io-client";
@@ -34,11 +35,31 @@ export default function Chats() {
       console.log('Socket connected successfully!');
     });
 
-    socketRef.current.on('connect_error', (err) => {
+    socketRef.current.on('connect_error', async (err) => {
       console.error("Socket connection error:", err.message);
       
       if (err.message === "Unauthorized") {
         console.log("Token expired, reconnecting...");
+         try {
+          const refreshToken = localStorage.getItem("refresh_token");
+          const res = await axios.post("http://localhost:4000/token", {
+            refreshToken,
+          });
+
+          if (res.data) {
+            console.log("New tokens generated (socket)", res.data);
+            localStorage.setItem("access_token", res.data.accessToken);
+            localStorage.setItem("refresh_token", res.data.refreshToken);
+
+            socketRef.current.auth = { token: res.data.accessToken };
+            socketRef.current.connect();
+          }
+        } catch (refreshError) {
+          console.error("Socket token refresh failed", refreshError);
+          localStorage.clear();
+          window.location.href = "/log-in";
+        }
+      
       }
     });
 
@@ -73,12 +94,12 @@ export default function Chats() {
   }, []);   
   
   useEffect(() => {
-    if (location.state?.selectedUser) {
+    if (location.state?.selectedUser && chatUsers.length > 0) {
       const selectedUser = location.state.selectedUser;
-      
+      const targetId = selectedUser._id || selectedUser.userId;
       if (location.state.isGroupChat) {
         const existingGroupChat = chatUsers.find(chat => 
-          chat.isGroupChat && chat.participants?.some(p => p.userId === selectedUser._id)
+          chat.isGroupChat && chat.participants?.some(p => p.userId === targetId)
         );
         
         if (existingGroupChat) {
@@ -89,14 +110,14 @@ export default function Chats() {
         }
       } else {
         const existingChat = chatUsers.find(chatUser => 
-          !chatUser.isGroupChat && chatUser.userId === selectedUser._id
+          !chatUser.isGroupChat && chatUser.userId === targetId
         );
-        
-        if (existingChat) {
-          setSelectedChat(existingChat);
-          fetchMessages(existingChat.chatId);
-        } else {
-          createNewChat(selectedUser);
+      if (existingChat) {
+        setSelectedChat(existingChat);
+        fetchMessages(existingChat.chatId);
+      } else {
+          console.log('Creating new chat for selected user:', selectedUser);
+        createNewChat(selectedUser);
         }
       }
       
@@ -126,14 +147,15 @@ export default function Chats() {
 
   const createNewChat = async (selectedUser) => {
     try {
+      const targetId = selectedUser._id || selectedUser.userId;
       const response = await axiosInstance.post('/api/chats/create-or-get', {
-        participantId: selectedUser._id
+        participantId: targetId
       });
       
       const newChat = {
         chatId: response.data.chatId,
         isGroupChat: false,
-        userId: selectedUser._id,
+        userId: targetId,
         username: selectedUser.anonymousUsername,
         pfp: selectedUser.anonymousPfp,
         followersCount: selectedUser.followersCount,
@@ -295,7 +317,6 @@ export default function Chats() {
   }, [selectedChat]);
 
   const selectChat = (chatUser) => {
-    console.log('Selecting chat:', chatUser);
     
     if (selectedChat?.chatId) {
       console.log('Leaving previous chat room:', selectedChat.chatId);
@@ -349,7 +370,7 @@ export default function Chats() {
           <h1 className="flex gap-2 text-2xl font-bold bg-[var(--accent-y)] bg-clip-text text-transparent">
             <img src="./img/CloakTalk.png" alt="logo" className='w-8 h-8 rounded-full' />Messages
           </h1>  
-          <UserSearchTrigger/>
+            <UserSearchTrigger/>
         </div>
 
         <div className="flex-1 overflow-y-auto">
@@ -365,9 +386,9 @@ export default function Chats() {
             >
               <div className="flex items-center space-x-3">
                 <div className="relative">
-                    <div className="w-12 h-12 overflow-hidden rounded-full border-2 border-[var(--accent-p)] shadow-lg transform transition-all duration-300 hover:scale-105">
+                  <div className="w-12 h-12 overflow-hidden rounded-full border-2 border-[var(--accent-p)] shadow-lg transform transition-all duration-300 hover:scale-105">
                       <img src={chatUser.isGroupChat ? chatUser.groupPfp: chatUser.pfp} alt={chatUser.isGroupChat ? chatUser.groupName : chatUser.username} className="w-full h-full scale-125 object-cover object-center" />
-                    </div>
+                 </div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
@@ -381,7 +402,7 @@ export default function Chats() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 justify-between">
-                    <p className="text-sm text-zinc-400 truncate text-left">{chatUser.lastMessage}</p>
+                  <p className="text-sm text-zinc-400 truncate text-left">{chatUser.lastMessage}</p>
                     <span className="text-xs text-zinc-400 pr-1">{formatTime(chatUser.timestamp)}</span>
                   </div>
                 </div>
@@ -441,7 +462,7 @@ export default function Chats() {
                           </div>
                         )}
                       </div>
-                    </div>
+                 </div>
                   )}
                 </div>
               </div>
@@ -455,7 +476,7 @@ export default function Chats() {
                 >
                   <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl text-white shadow-lg font-semibold ${
                     msg.isCurrentUser
-                      ? 'bg-gradient-to-r from-[#9a4567] to-[#f995bd] text-right rounded-br-md'
+                      ? 'bg-gradient-to-r from-[#c14a7a] to-[#f995bd] text-right rounded-br-md'
                       : 'bg-zinc-800 rounded-bl-md text-left'
                   }`}>
                     {!msg.isCurrentUser && selectedChat.isGroupChat && (

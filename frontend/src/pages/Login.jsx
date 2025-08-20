@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState,useContext } from "react";
 import Navbar from '/src/components/Navbar';
+import { UserContext } from '../context/userContext';
 import { GoogleLogin } from '@react-oauth/google';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
 export default function Login() {
     const [email, setEmail] = useState("");
+    const {setUser} = useContext(UserContext);
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
     const borderClass = "border border-t-[var(--accent-p)] border-l-[var(--accent-p)] border-r-[var(--accent-y)] border-b-[var(--accent-y)]";
@@ -13,10 +15,11 @@ export default function Login() {
     async function handleSignin (res){
         try {
           const response = await axios.post('http://localhost:4000/signup/google', {token: res.credential},);
-          console.log("Login success:", response.data);
+          // console.log("Login success:", response.data);
           localStorage.setItem('access_token', response.data.accessToken);
           localStorage.setItem('refresh_token', response.data.refreshToken);
-          localStorage.setItem('user',JSON.stringify(response.data.user));
+          setUser(response.data.user);
+          // localStorage.setItem('user',JSON.stringify(response.data.user));
           navigate('/feed');
         } catch (err) {
           if (err.response && err.response.status === 400) {

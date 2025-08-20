@@ -11,15 +11,17 @@ import User from '../Models/user.js';
 export async function getPosts(req, res) {
     try {
         const postId = req.params.id;
-        const user = req.params.userid; //when you wanna retrieve only posts by a particular user for profile page
+        const user = req.params.userid; // profile page posts
         const bookmarked = req.query.bookmarked;
-        const userId = req.user ? new mongoose.Types.ObjectId(req.user.userId) : null; //current logged in user //ObjectId (BSON) used to identify a document in a collection we are converting the string to objectId
+        const userId = req.user ? new mongoose.Types.ObjectId(req.user.userId) : null;
+        const reqPath = (req.path || '').toLowerCase();
         let matchQuery = {};
-        if(postId){
-        matchQuery = { _id: postId };
-        }else if (user){
-        matchQuery = { userId: user };
-        }else if(bookmarked){
+
+        if (postId) {
+            matchQuery = { _id: postId };
+        } else if (user) {
+            matchQuery = { userId: user };
+        } else if (bookmarked) {
             const bookmarks = await Bookmark.find({ userId }).select('postId');
             const bookmarkedPostIds = bookmarks.map(bookmark => bookmark.postId);
             
@@ -28,7 +30,18 @@ export async function getPosts(req, res) {
             }
             
             matchQuery = { _id: { $in: bookmarkedPostIds } };
-        }else{
+        } else if (reqPath.endsWith('/following')) {
+            // Only posts from users the current user follows
+            if (!userId) return res.json([]);
+            const currentUser = await User.findById(userId).select('following');
+            const followingIds = (currentUser?.following || []).map(id => id.toString());
+            if (followingIds.length === 0) return res.json([]);
+            matchQuery = { userId: { $in: followingIds } };
+        } else if (reqPath.endsWith('/resources')) {
+            matchQuery = { tags: { $in: ['Resources', 'Advice'] } };
+        } else if (reqPath.endsWith('/yap')) {
+            matchQuery = { tags: { $in: ['Rant', 'Yap'] } };
+        } else {
             matchQuery = {};
         }
 
@@ -101,6 +114,7 @@ export async function getPosts(req, res) {
                     content: 1,
                     mediaPath: 1,
                     mediaType: 1,
+                    tags: 1,
                     isFollowingAuthor: 1,
                     anonymousUsername: 1,
                     anonymousPfp: 1,

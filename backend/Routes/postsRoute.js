@@ -10,6 +10,16 @@ router.use(authenticateToken);
 
 //like comment bookmark
 
+router.get('/bookmarks',getPosts);
+
+router.get('/following', getPosts);
+
+router.get('/resources', getPosts);
+
+router.get('/yap', getPosts);
+
+router.get('/:postId/comments', getComments);
+
 router.post('/like/:postId',async (req,res)=>{
     const postId = req.params.postId;
     const userId = req.user.userId;
@@ -87,10 +97,6 @@ router.delete('/bookmark/:postId', async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
-
-router.get('/bookmarks',getPosts);
-
-router.get('/:postId/comments', getComments);
 
 router.post('/:postId/comments', async (req, res) => {
     const { postId } = req.params;

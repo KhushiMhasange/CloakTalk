@@ -12,7 +12,6 @@ export const UserProvider = ({children}) =>{
         try {
             const userData = JSON.parse(userString);
             setUser(userData);
-            console.log("context user data",userData);
         } catch (error) {
             console.error('Invalid user JSON:', error);
         }
